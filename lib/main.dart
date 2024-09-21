@@ -21,7 +21,7 @@ class alphab extends StatelessWidget {
               appTitle,
               style: TextStyle(color: Colors.pinkAccent),
             ),
-            backgroundColor: Color.fromARGB(110, 255, 255, 255),
+            backgroundColor: const Color.fromARGB(110, 255, 255, 255),
           ),
           body: const LoginPage(),
           extendBodyBehindAppBar: true,
