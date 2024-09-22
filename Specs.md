@@ -54,7 +54,7 @@
 | "lost"          | 数据不完整，数据丢失 |
 | "decrypt error" | 服务端数据解密失败   |
 
-#### image
+### image
 
 {"type":"image","id":"03","name":String,  "head color":String, "bubble color":String, "data": String}
 
@@ -66,7 +66,7 @@
 | bubble color | 气泡颜色   |
 | data       | 图片(base64编码后采用AES加密) |
 
-#### return
+### return
 
 {"id":"03","status":String}
 
@@ -77,7 +77,7 @@
 | "lost"          | 数据不完整，数据丢失 |
 | "decrypt error" | 服务端数据解密失败   |
 
-#### disposable image
+### disposable image
 
 {"type":"disposable image","id":"04","name":String,  "head color":String, "bubble color":String, "data": String}
 
@@ -90,7 +90,7 @@
 | data       | 图片(base64编码后采用AES加密) |
 
 
-#### return
+### return
 
 {"id":"04","status":String}
 
@@ -101,7 +101,7 @@
 | "lost"          | 数据不完整，数据丢失 |
 | "decrypt error" | 服务端数据解密失败   |
 
-#### audio
+### audio
 
 {"type":"audio","id":"05","name":String,  "head color":String, "bubble color":String, "data": String}
 

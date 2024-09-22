@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:alphab/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +42,7 @@ class _chatpage extends State<chatpage> {
 
   // <-----------------------消息行生成开始----------------------->
   // 文本行
-  chatRowText(BuildContext context, String name, String text,
+  chatRowText(BuildContext context, String name, String text, String id,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
@@ -88,9 +90,6 @@ class _chatpage extends State<chatpage> {
                   color: bubbleColor),
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    isSuccess = true;
-                  });
                   Clipboard.setData(ClipboardData(text: text)).then((_) {
                     // 显示一个SnackBar来通知用户文本已被复制
                     const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
@@ -166,7 +165,7 @@ class _chatpage extends State<chatpage> {
   }
 
   // 图片行
-  chatRowImage(BuildContext context, String name,
+  chatRowImage(BuildContext context, String name, Uint8List image,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
@@ -176,11 +175,7 @@ class _chatpage extends State<chatpage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
+          Image.memory(image, color: headNameColor, height: 50),
           Text(
             name,
             style: TextStyle(color: headNameColor, fontSize: 25),
@@ -236,11 +231,7 @@ class _chatpage extends State<chatpage> {
             name,
             style: TextStyle(color: headNameColor, fontSize: 25),
           ),
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
+          Image.memory(image, color: headNameColor, height: 50),
         ],
       );
     }
@@ -262,25 +253,43 @@ class _chatpage extends State<chatpage> {
           child: Column(children: [
             Expanded(
               child: Scrollbar(
-                thickness: 8.0, // 滚动条的厚度
-                radius: const Radius.circular(20.0), // 滚动条的圆角
-                thumbVisibility: true, // 是否总是显示滚动条滑块
-                controller: scrollController_scoll,
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    chatRowText(context, Core.name, "你好😋", true, Color(int.parse(Core.headColor)),
-                        Color(int.parse(Core.bubbleColor))),
-                    chatRowText(context, 'peter', "你好！", false, Colors.red,
-                        Colors.grey, false),
-                    chatRowText(context, 'Luis', "你也好！", false, Colors.purple,
-                        Colors.white),
-                    chatRowImage(context, 'Bob', false),
-                    chatRowImage(context, 'Bob2', true, Colors.white)
-                  ],
-                ),
-              ),
+                  thickness: 8.0, // 滚动条的厚度
+                  radius: const Radius.circular(20.0), // 滚动条的圆角
+                  thumbVisibility: true, // 是否总是显示滚动条滑块
+                  controller: scrollController_scoll,
+                  child: ListView.builder(
+                      itemCount: Core.rowMessage.length,
+                      reverse: Core.rowMessage.length>4?true:false,
+                      itemBuilder: (BuildContext builContext, int index) {
+                        var any = Core.rowMessage[index];
+                          if (any['type'] == "message") {
+                            return chatRowText(
+                                context,
+                                any['name'] as String,
+                                any['text'] as String,
+                                any['id'] as String,
+                                false,
+                                Color(int.parse(any['head color'] as String)),
+                                Color(int.parse(any['bubble color'] as String)),
+                                any['isSuccess'] as bool);
+                          } else if (any['type'] == 'image') {
+                            return chatRowImage(
+                                context,
+                                any['name'] as String,
+                                any['data'] as Uint8List,
+                                false,
+                                Color(int.parse(any['head color'] as String)),
+                                Color(int.parse(any['bubble color'] as String)),
+                                any['isSuccess'] as bool);
+                          }
+                      })
+                  //ListView(
+                  //   shrinkWrap: true,
+                  //   padding: const EdgeInsets.all(20),
+                  //   children: [
+                  //   ],
+                  // ),
+                  ),
             ),
             Row(
               children: [
@@ -347,8 +356,10 @@ class _chatpage extends State<chatpage> {
                       var ret =
                           await Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => settings(
-                                    headColorBefore: Color(int.parse(Core.headColor)),
-                                    bubbleColorBefore: Color(int.parse(Core.bubbleColor)),
+                                    headColorBefore:
+                                        Color(int.parse(Core.headColor)),
+                                    bubbleColorBefore:
+                                        Color(int.parse(Core.bubbleColor)),
                                     nickName: Core.name,
                                   )));
                       setState(() {
@@ -541,7 +552,9 @@ class _settings extends State<settings> {
                     ),
                     Text(
                       Core.name,
-                      style: TextStyle(color: Color(int.parse(Core.headColor)), fontSize: 25),
+                      style: TextStyle(
+                          color: Color(int.parse(Core.headColor)),
+                          fontSize: 25),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(15),
@@ -590,7 +603,8 @@ class _settings extends State<settings> {
                                 child: const Text('Got it'),
                                 onPressed: () {
                                   setState(() {
-                                    Core.bubbleColor = pickColor.value.toString();
+                                    Core.bubbleColor =
+                                        pickColor.value.toString();
                                   });
                                   Navigator.of(context).pop();
                                 },

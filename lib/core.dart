@@ -17,35 +17,75 @@ class Core {
   static int _count = 0;
   static String _connectId = "";
   // 全局消息链
-  static var rowMessage = [];
+  static var rowMessage = [
+    {
+      "type": "message",
+      "id": "43242",
+      "name": "匿名",
+      "text": "你好！",
+      "head color": "4280391411",
+      "bubble color": "4294967295",
+      "isSuccess": false
+    },
+    {
+      "type": "message",
+      "id": "4324215",
+      "name": "匿名",
+      "text": "你好！",
+      "head color": "4280391411",
+      "bubble color": "4294967295",
+      "isSuccess": true
+    },
+    {
+      "type": "message",
+      "id": "4324422",
+      "name": "匿名",
+      "text": "你也好！",
+      "head color": "4280391411",
+      "bubble color": "4294967295",
+      "isSuccess": false
+    },
+    {
+      "type": "message",
+      "id": "4324222",
+      "name": "匿名",
+      "text": "妙极了！",
+      "head color": "4280391411",
+      "bubble color": "4294967295",
+      "isSuccess": false
+    },
+  ];
   static String headColor = material.Colors.blue.value.toString();
   static String bubbleColor = material.Colors.white.value.toString();
   static String name = "匿名";
 
   static _generateRsaKey() async {
     final headers = {
-      'accept': 'application/json, text/javascript, */*; q=0.01',
-      'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-      'cache-control': 'no-cache',
-      'content-type': 'application/json;charset=UTF-8',
-      'origin': 'https://www.lddgo.net',
-      'pragma': 'no-cache',
-      'priority': 'u=1, i',
-      'referer': 'https://www.lddgo.net/encrypt/rsakey',
+      'Accept': 'application/json, text/javascript, */*; q=0.01',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Origin': 'https://www.bejson.com',
+      'Pragma': 'no-cache',
+      'Referer': 'https://www.bejson.com/enc/rsa/',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'same-origin',
+      'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
+      'X-Requested-With': 'XMLHttpRequest',
       'sec-ch-ua':
           '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
       'sec-ch-ua-mobile': '?0',
       'sec-ch-ua-platform': '"Windows"',
-      'sec-fetch-dest': 'empty',
-      'sec-fetch-mode': 'cors',
-      'sec-fetch-site': 'same-site',
-      'user-agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
     };
-    const data =
-        '{"algorithm":"RSA","length":"2048","format":"pem","publicKey":"","privateKey":""}';
-    final url = Uri.parse(
-        'https://openapi.lddgo.net/base/gtool/api/v1/GeneratorRsaKey');
+    var data = {
+      'rsaLength': '2048',
+      'rsaFormat': 'PKCS#1',
+      'rsaPass': '',
+    };
+    var url = Uri.parse('https://www.bejson.com/Bejson/Api/Rsa/getRsaKey');
     final res = await http.post(url, headers: headers, body: data);
     final status = res.statusCode;
     if (status != 200) throw Exception('http.post error: statusCode= $status');
@@ -54,13 +94,10 @@ class Core {
     if (!dir.existsSync()) {
       dir.create();
     }
-    await File("./Key/publicKey.pem")
-        .writeAsString(result['data']['publicKey']);
-    await File("./Key/privateKey.pem")
-        .writeAsString(result['data']['privateKey']);
-    print((result['data']['privateKey'] as String).replaceRange(0, 31, "-----BEGIN PRIVATE KEY-----"));
-    _publicKey = RSAKeyParser().parse(result['data']['publicKey'] as String);
-    _privateKey = RSAKeyParser().parse((result['data']['privateKey'] as String).replaceAll(" RSA ", " "));
+    await File("./Key/publicKey.pem").writeAsString(result['data']['public']);
+    await File("./Key/privateKey.pem").writeAsString(result['data']['private']);
+    _publicKey = RSAKeyParser().parse(result['data']['public'] as String);
+    _privateKey = RSAKeyParser().parse(result['data']['private'] as String);
   }
 
   static connect(String ip, int port) {
@@ -71,10 +108,9 @@ class Core {
       await _generateRsaKey();
       message['type'] = "connect";
       message['id'] = _connectId;
-      message['public key'] =await File('./Key/publicKey.pem').readAsString();
+      message['public key'] = await File('./Key/publicKey.pem').readAsString();
       String jsonMessage = json.encode(message);
-      print(jsonMessage);
-      _server?.write(utf8.encode(jsonMessage));
+      _server?.write(jsonMessage);
       _server?.listen((data) async {
         _messageDeal(utf8.decode(data));
       }, onError: (error) {
@@ -145,7 +181,6 @@ class Core {
           });
         }
         // <-----------------------消息处理完成----------------------->
-
       }
     } catch (e) {
       print('error$e');
@@ -253,5 +288,4 @@ class Core {
     }
   }
   // <-----------------------消息发送区域结束----------------------->
-
 }
