@@ -14,6 +14,7 @@
 | type               | remark     |
 | ------------------ | ---------- |
 | "connect"          | 连接服务器 |
+| "callback"         | 消息回调   |
 | "message"          | 文本消息   |
 | "image"            | 图片消息   |
 | "disposable image" | 闪照消息   |
@@ -41,22 +42,9 @@
 | bubble color | 气泡颜色   |
 | text         | 消息文本   |
 
-
-
-#### return
-
-{"id":"02","status":String}
-
-| status          |                      |
-| --------------- | -------------------- |
-| "success"       | 成功                 |
-| "fail"          | 失败                 |
-| "lost"          | 数据不完整，数据丢失 |
-| "decrypt error" | 服务端数据解密失败   |
-
 ### image
 
-{"type":"image","id":"03","name":String,  "head color":String, "bubble color":String, "data": String}
+{"type":"image","id":"03","name":String,  "head color":String, "bubble color":String, "data": String ,"size":String }
 
 | 字段       | 备注       |
 | ---------- | ---------- |
@@ -65,17 +53,7 @@
 | head color | 头像颜色   |
 | bubble color | 气泡颜色   |
 | data       | 图片(base64编码后采用AES加密) |
-
-### return
-
-{"id":"03","status":String}
-
-| status          | remark               |
-| --------------- | -------------------- |
-| "success"       | 成功                 |
-| "fail"          | 失败                 |
-| "lost"          | 数据不完整，数据丢失 |
-| "decrypt error" | 服务端数据解密失败   |
+| size | 尺寸，如"300x400" |
 
 ### disposable image
 
@@ -89,18 +67,6 @@
 | bubble color | 气泡颜色   |
 | data       | 图片(base64编码后采用AES加密) |
 
-
-### return
-
-{"id":"04","status":String}
-
-| status          |                      |
-| --------------- | -------------------- |
-| "success"       | 成功                 |
-| "fail"          | 失败                 |
-| "lost"          | 数据不完整，数据丢失 |
-| "decrypt error" | 服务端数据解密失败   |
-
 ### audio
 
 {"type":"audio","id":"05","name":String,  "head color":String, "bubble color":String, "data": String}
@@ -112,17 +78,6 @@
 | head color | 头像颜色   |
 | bubble color | 气泡颜色   |
 | data       | 音频(base64编码后采用AES加密) |
-
-#### return
-
-{"id":"05","status":String}
-
-| status          |                      |
-| --------------- | -------------------- |
-| "success"       | 成功                 |
-| "fail"          | 失败                 |
-| "lost"          | 数据不完整，数据丢失 |
-| "decrypt error" | 服务端数据解密失败   |
 
 ## 前端被动接收
 
@@ -140,21 +95,23 @@
 
 ### image
 
-{"type":"image", "id":String, "name":String, "data":String , "head color":String, "bubble color":String}
+{"type":"image", "id":String, "name":String, "data":String , "size":String , "head color":String, "bubble color":String}
 
 | name         | 昵称                          |
 | ------------ | ----------------------------- |
 | data         | 图片(base64编码后采用AES加密) |
+| size         | 尺寸，如"300x400"             |
 | head color   | 头像颜色                      |
 | bubble color | 气泡颜色                      |
 
 ### disposable image
 
-{"type":"disposable image", "id":String, "name":String, "data":String , "head color":String, "bubble color":String}
+{"type":"disposable image", "id":String, "name":String, "data":String ,"size":String , "head color":String, "bubble color":String}
 
 | name         | 昵称                          |
 | ------------ | ----------------------------- |
 | data         | 图片(base64编码后采用AES加密) |
+| size         | 尺寸，如"300x400"             |
 | head color   | 头像颜色                      |
 | bubble color | 气泡颜色                      |
 
@@ -167,3 +124,14 @@
 | data         | 音频(base64编码后采用AES加密) |
 | head color   | 头像颜色                      |
 | bubble color | 气泡颜色                      |
+
+## 消息回调
+
+{"type":"callback" , id":"02","status":String}
+
+| status          |                      |
+| --------------- | -------------------- |
+| "success"       | 成功                 |
+| "fail"          | 失败                 |
+| "lost"          | 数据不完整，数据丢失 |
+| "decrypt error" | 服务端数据解密失败   |

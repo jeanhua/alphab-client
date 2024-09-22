@@ -106,10 +106,6 @@ class _chatpage extends State<chatpage> {
               ),
             ),
           ),
-          Tooltip(
-              message: isSuccess ? "发送成功" : "发送中",
-              child:
-                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded))
         ],
       );
     }
@@ -165,7 +161,7 @@ class _chatpage extends State<chatpage> {
   }
 
   // 图片行
-  chatRowImage(BuildContext context, String name, Uint8List image,
+  chatRowImage(BuildContext context, String name, Uint8List image,String size,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
@@ -175,7 +171,10 @@ class _chatpage extends State<chatpage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Image.memory(image, color: headNameColor, height: 50),
+          Image(
+              image: const AssetImage("./images/head.png"),
+              color: headNameColor,
+              height: 50),
           Text(
             name,
             style: TextStyle(color: headNameColor, fontSize: 25),
@@ -183,23 +182,24 @@ class _chatpage extends State<chatpage> {
           Padding(
             padding: const EdgeInsets.all(15),
             child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(0),
-                      topRight: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
-                      bottomRight: Radius.circular(16.0),
-                    ),
-                    color: bubbleColor),
-                child: const Image(
-                  image: AssetImage('images/test.jpg'),
-                  width: 250,
-                )),
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(0),
+                    topRight: Radius.circular(16.0),
+                    bottomLeft: Radius.circular(16.0),
+                    bottomRight: Radius.circular(16.0),
+                  ),
+                  color: bubbleColor),
+              child: Image.memory(
+                image,
+                color: headNameColor,
+                width: double.parse(size.split('x')[0])<500?double.parse(size.split('x')[0]):500,
+                height: double.parse(size.split('x')[1])<500?double.parse(size.split('x')[0]):500,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              ),
+            ),
           ),
-          Tooltip(
-              message: isSuccess ? "发送成功" : "发送中",
-              child:
-                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
         ],
       );
     } else {
@@ -214,29 +214,36 @@ class _chatpage extends State<chatpage> {
           Padding(
             padding: const EdgeInsets.all(15),
             child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(0),
-                      topRight: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
-                      bottomRight: Radius.circular(16.0),
-                    ),
-                    color: bubbleColor),
-                child: const Image(
-                  image: AssetImage('images/test.jpg'),
-                  width: 250,
-                )),
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(0),
+                    topRight: Radius.circular(16.0),
+                    bottomLeft: Radius.circular(16.0),
+                    bottomRight: Radius.circular(16.0),
+                  ),
+                  color: bubbleColor),
+              child: Image.memory(
+                image,
+                color: headNameColor,
+                width: 500,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              ),
+            ),
           ),
           Text(
             name,
             style: TextStyle(color: headNameColor, fontSize: 25),
           ),
-          Image.memory(image, color: headNameColor, height: 50),
+          Image(
+              image: const AssetImage("./images/head.png"),
+              color: headNameColor,
+              height: 50),
         ],
       );
     }
   }
-  // <-----------------------消息行生成开始----------------------->
+  // <-----------------------消息行生成结束----------------------->
 
   @override
   Widget build(BuildContext context) {
@@ -259,29 +266,29 @@ class _chatpage extends State<chatpage> {
                   controller: scrollController_scoll,
                   child: ListView.builder(
                       itemCount: Core.rowMessage.length,
-                      reverse: Core.rowMessage.length>4?true:false,
                       itemBuilder: (BuildContext builContext, int index) {
                         var any = Core.rowMessage[index];
-                          if (any['type'] == "message") {
-                            return chatRowText(
-                                context,
-                                any['name'] as String,
-                                any['text'] as String,
-                                any['id'] as String,
-                                false,
-                                Color(int.parse(any['head color'] as String)),
-                                Color(int.parse(any['bubble color'] as String)),
-                                any['isSuccess'] as bool);
-                          } else if (any['type'] == 'image') {
-                            return chatRowImage(
-                                context,
-                                any['name'] as String,
-                                any['data'] as Uint8List,
-                                false,
-                                Color(int.parse(any['head color'] as String)),
-                                Color(int.parse(any['bubble color'] as String)),
-                                any['isSuccess'] as bool);
-                          }
+                        if (any['type'] == "message") {
+                          return chatRowText(
+                              context,
+                              any['name'] as String,
+                              any['text'] as String,
+                              any['id'] as String,
+                              false,
+                              Color(int.parse(any['head color'] as String)),
+                              Color(int.parse(any['bubble color'] as String)),
+                              any['isSuccess'] as bool);
+                        } else if (any['type'] == 'image') {
+                          return chatRowImage(
+                              context,
+                              any['name'] as String,
+                              any['data'] as Uint8List,
+                              any['size'] as String,
+                              false,
+                              Color(int.parse(any['head color'] as String)),
+                              Color(int.parse(any['bubble color'] as String)),
+                              any['isSuccess'] as bool);
+                        }
                       })
                   //ListView(
                   //   shrinkWrap: true,
@@ -463,6 +470,7 @@ class _settings extends State<settings> {
             image: DecorationImage(
                 image: AssetImage("images/bg.jpg"), fit: BoxFit.cover)),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
