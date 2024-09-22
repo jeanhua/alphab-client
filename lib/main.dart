@@ -75,21 +75,6 @@ class _LoginPage extends State<LoginPage> {
     );
   }
 
-  // 连接服务器
-  Future<void> connectToServer() async {
-    if (textController_ip.text == '' || textController_port.text == '') {
-      notice_dialog("服务器IP或端口不能为空！");
-      return;
-    }
-    try {
-      server = await Socket.connect(
-          textController_ip.text, int.parse(textController_ip.text));
-    } catch (e) {
-      notice_dialog("连接失败！");
-    }
-    isConnect = true;
-  }
-
   // 页面跳转聊天界面
   void routeToChat() {
     Navigator.pushAndRemoveUntil(
@@ -153,7 +138,7 @@ class _LoginPage extends State<LoginPage> {
                 child: TextButton(
                   onPressed: () => {routeToChat()},
                   style: TextButton.styleFrom(
-                    backgroundColor: Color.fromARGB(100, 255, 255, 255),
+                    backgroundColor: const Color.fromARGB(100, 255, 255, 255),
                   ),
                   child: const Text(
                     "确定",

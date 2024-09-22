@@ -1,3 +1,4 @@
+import 'package:alphab/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,9 +13,7 @@ class chatpage extends StatefulWidget {
 
 class _chatpage extends State<chatpage> {
   final textController_message = TextEditingController();
-  late Color headColor = Colors.blue;
-  late Color bubbleColor = Colors.lightGreen;
-  late String nickName = '匿名';
+  final scrollController_scoll = ScrollController();
   // 弹出提示框
   void notice_dialog(String noticeText, [String title = "提示"]) {
     showDialog(
@@ -39,6 +38,215 @@ class _chatpage extends State<chatpage> {
     );
   }
 
+  // <-----------------------消息行生成开始----------------------->
+  // 文本行
+  chatRowText(BuildContext context, String name, String text,
+      [bool isRight = false,
+      Color headNameColor = Colors.blue,
+      Color bubbleColor = Colors.grey,
+      bool isSuccess = false]) {
+    // 处理text溢出
+    const rowMaxLength = 30;
+    if (text.length > rowMaxLength) {
+      var textdeal = "";
+      int j = 0;
+      for (int i = 0; i < text.length; i++) {
+        textdeal += text[i];
+        if (j == rowMaxLength) {
+          j = 0;
+          textdeal += '\n';
+        }
+        j++;
+      }
+      text = textdeal;
+    }
+    // 左边气泡
+    if (!isRight) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Image(
+            image: const AssetImage('images/head.png'),
+            height: 50,
+            color: headNameColor,
+          ),
+          Text(
+            name,
+            style: TextStyle(color: headNameColor, fontSize: 25),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(0),
+                    topRight: Radius.circular(16.0),
+                    bottomLeft: Radius.circular(16.0),
+                    bottomRight: Radius.circular(16.0),
+                  ),
+                  color: bubbleColor),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isSuccess = true;
+                  });
+                  Clipboard.setData(ClipboardData(text: text)).then((_) {
+                    // 显示一个SnackBar来通知用户文本已被复制
+                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  });
+                },
+                child: Text(
+                  ' $text ',
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  softWrap: true,
+                ),
+              ),
+            ),
+          ),
+          Tooltip(
+              message: isSuccess ? "发送成功" : "发送中",
+              child:
+                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded))
+        ],
+      );
+    }
+    // 右边气泡
+    else {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Tooltip(
+              message: isSuccess ? "发送成功" : "发送中",
+              child:
+                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16.0),
+                    topRight: Radius.circular(0),
+                    bottomLeft: Radius.circular(16.0),
+                    bottomRight: Radius.circular(16.0),
+                  ),
+                  color: bubbleColor),
+              child: GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: text)).then((_) {
+                    // 显示一个SnackBar来通知用户文本已被复制
+                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  });
+                },
+                child: Text(
+                  ' $text ',
+                  style: const TextStyle(fontSize: 20),
+                  softWrap: true,
+                ),
+              ),
+            ),
+          ),
+          Text(
+            name,
+            style: TextStyle(color: headNameColor, fontSize: 25),
+          ),
+          Image(
+            image: const AssetImage('images/head.png'),
+            height: 50,
+            color: headNameColor,
+          ),
+        ],
+      );
+    }
+  }
+
+  // 图片行
+  chatRowImage(BuildContext context, String name,
+      [bool isRight = false,
+      Color headNameColor = Colors.blue,
+      Color bubbleColor = Colors.grey,
+      bool isSuccess = false]) {
+    if (!isRight) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Image(
+            image: const AssetImage('images/head.png'),
+            height: 50,
+            color: headNameColor,
+          ),
+          Text(
+            name,
+            style: TextStyle(color: headNameColor, fontSize: 25),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(16.0),
+                      bottomLeft: Radius.circular(16.0),
+                      bottomRight: Radius.circular(16.0),
+                    ),
+                    color: bubbleColor),
+                child: const Image(
+                  image: AssetImage('images/test.jpg'),
+                  width: 250,
+                )),
+          ),
+          Tooltip(
+              message: isSuccess ? "发送成功" : "发送中",
+              child:
+                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
+        ],
+      );
+    } else {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Tooltip(
+              message: isSuccess ? "发送成功" : "发送中",
+              child:
+                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(16.0),
+                      bottomLeft: Radius.circular(16.0),
+                      bottomRight: Radius.circular(16.0),
+                    ),
+                    color: bubbleColor),
+                child: const Image(
+                  image: AssetImage('images/test.jpg'),
+                  width: 250,
+                )),
+          ),
+          Text(
+            name,
+            style: TextStyle(color: headNameColor, fontSize: 25),
+          ),
+          Image(
+            image: const AssetImage('images/head.png'),
+            height: 50,
+            color: headNameColor,
+          ),
+        ],
+      );
+    }
+  }
+  // <-----------------------消息行生成开始----------------------->
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -57,18 +265,19 @@ class _chatpage extends State<chatpage> {
                 thickness: 8.0, // 滚动条的厚度
                 radius: const Radius.circular(20.0), // 滚动条的圆角
                 thumbVisibility: true, // 是否总是显示滚动条滑块
+                controller: scrollController_scoll,
                 child: ListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    chatRow.chatRowText(context, nickName, "你好😋", true,
-                        headColor, bubbleColor),
-                    chatRow.chatRowText(context, 'peter', "你好！", false,
-                        Colors.red, Colors.grey),
-                    chatRow.chatRowText(context, 'Luis', "你也好！", false,
-                        Colors.purple, Colors.white),
-                    chatRow.chatRowImage(context, 'Bob', false),
-                    chatRow.chatRowImage(context, 'Bob2', true, Colors.white)
+                    chatRowText(context, Core.name, "你好😋", true, Color(int.parse(Core.headColor)),
+                        Color(int.parse(Core.bubbleColor))),
+                    chatRowText(context, 'peter', "你好！", false, Colors.red,
+                        Colors.grey, false),
+                    chatRowText(context, 'Luis', "你也好！", false, Colors.purple,
+                        Colors.white),
+                    chatRowImage(context, 'Bob', false),
+                    chatRowImage(context, 'Bob2', true, Colors.white)
                   ],
                 ),
               ),
@@ -138,14 +347,14 @@ class _chatpage extends State<chatpage> {
                       var ret =
                           await Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => settings(
-                                    headColorBefore: headColor,
-                                    bubbleColorBefore: bubbleColor,
-                                    nickName: nickName,
+                                    headColorBefore: Color(int.parse(Core.headColor)),
+                                    bubbleColorBefore: Color(int.parse(Core.bubbleColor)),
+                                    nickName: Core.name,
                                   )));
                       setState(() {
-                        headColor = ret['headColor'];
-                        bubbleColor = ret['bubbleColor'];
-                        nickName = ret['nickName'];
+                        Core.headColor = ret['headColor'].value.toString();
+                        Core.bubbleColor = ret['bubbleColor'].value.toString();
+                        Core.name = ret['nickName'];
                       });
                     },
                     icon: const Icon(Icons.settings),
@@ -194,194 +403,6 @@ class _chatpage extends State<chatpage> {
   }
 }
 
-class chatRow {
-  // 文本行
-  static chatRowText(BuildContext context, String name, String text,
-      [bool isRight = false,
-      Color headNameColor = Colors.blue,
-      Color bubbleColor = Colors.grey]) {
-    // 处理text溢出
-    const rowMaxLength = 30;
-    if (text.length > rowMaxLength) {
-      var textdeal = "";
-      int j = 0;
-      for (int i = 0; i < text.length; i++) {
-        textdeal += text[i];
-        if (j == rowMaxLength) {
-          j = 0;
-          textdeal += '\n';
-        }
-        j++;
-      }
-      text = textdeal;
-    }
-    // 左边气泡
-    if (!isRight) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(16.0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: text)).then((_) {
-                    // 显示一个SnackBar来通知用户文本已被复制
-                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  });
-                },
-                child: Text(
-                  ' $text ',
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ),
-                  softWrap: true,
-                ),
-              ),
-            ),
-          )
-        ],
-      );
-    }
-    // 右边气泡
-    else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16.0),
-                    topRight: Radius.circular(0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: text)).then((_) {
-                    // 显示一个SnackBar来通知用户文本已被复制
-                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  });
-                },
-                child: Text(
-                  ' $text ',
-                  style: const TextStyle(fontSize: 20),
-                  softWrap: true,
-                ),
-              ),
-            ),
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-        ],
-      );
-    }
-  }
-
-  // 图片行
-  static chatRowImage(BuildContext context, String name,
-      [bool isRight = false,
-      Color headNameColor = Colors.blue,
-      Color bubbleColor = Colors.grey]) {
-    if (!isRight) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(0),
-                      topRight: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
-                      bottomRight: Radius.circular(16.0),
-                    ),
-                    color: bubbleColor),
-                child: const Image(
-                  image: AssetImage('images/test.jpg'),
-                  width: 250,
-                )),
-          )
-        ],
-      );
-    } else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(0),
-                      topRight: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
-                      bottomRight: Radius.circular(16.0),
-                    ),
-                    color: bubbleColor),
-                child: const Image(
-                  image: AssetImage('images/test.jpg'),
-                  width: 250,
-                )),
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Image(
-            image: const AssetImage('images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-        ],
-      );
-    }
-  }
-}
-
 class settings extends StatefulWidget {
   final Color headColorBefore;
   final Color bubbleColorBefore;
@@ -392,21 +413,12 @@ class settings extends StatefulWidget {
       required this.bubbleColorBefore,
       required this.nickName});
   @override
-  State<StatefulWidget> createState() => _settings(
-      headColor: headColorBefore,
-      bubbleColor: bubbleColorBefore,
-      nickName: nickName);
+  State<StatefulWidget> createState() => _settings();
 }
 
 class _settings extends State<settings> {
-  late Color headColor;
-  late Color bubbleColor;
-  late String nickName;
   final textControllerNickName = TextEditingController();
-  _settings(
-      {required this.headColor,
-      required this.bubbleColor,
-      required this.nickName});
+  _settings();
 
   @override
   void dispose() {
@@ -417,7 +429,7 @@ class _settings extends State<settings> {
 
   @override
   Widget build(BuildContext context) {
-    textControllerNickName.text = nickName;
+    textControllerNickName.text = Core.name;
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
@@ -425,8 +437,8 @@ class _settings extends State<settings> {
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop({
-              'headColor': headColor,
-              'bubbleColor': bubbleColor,
+              'headColor': Color(int.parse(Core.headColor)),
+              'bubbleColor': Color(int.parse(Core.bubbleColor)),
               'nickName': textControllerNickName.text == ""
                   ? "匿名"
                   : textControllerNickName.text
@@ -488,7 +500,7 @@ class _settings extends State<settings> {
                 IconButton(
                     tooltip: '头像颜色',
                     onPressed: () {
-                      Color pickColor = headColor;
+                      Color pickColor = Color(int.parse(Core.headColor));
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -496,7 +508,7 @@ class _settings extends State<settings> {
                             title: const Text('Pick a color!'),
                             content: SingleChildScrollView(
                               child: BlockPicker(
-                                pickerColor: headColor,
+                                pickerColor: Color(int.parse(Core.headColor)),
                                 onColorChanged: (Color colorNow) {
                                   pickColor = colorNow;
                                 },
@@ -507,7 +519,7 @@ class _settings extends State<settings> {
                                 child: const Text('Got it'),
                                 onPressed: () {
                                   setState(() {
-                                    headColor = pickColor;
+                                    Core.headColor = pickColor.value.toString();
                                   });
                                   Navigator.of(context).pop();
                                 },
@@ -525,11 +537,11 @@ class _settings extends State<settings> {
                     Image(
                       image: const AssetImage('images/head.png'),
                       height: 50,
-                      color: headColor,
+                      color: Color(int.parse(Core.headColor)),
                     ),
                     Text(
-                      nickName,
-                      style: TextStyle(color: headColor, fontSize: 25),
+                      Core.name,
+                      style: TextStyle(color: Color(int.parse(Core.headColor)), fontSize: 25),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(15),
@@ -541,7 +553,7 @@ class _settings extends State<settings> {
                               bottomLeft: Radius.circular(16.0),
                               bottomRight: Radius.circular(16.0),
                             ),
-                            color: bubbleColor),
+                            color: Color(int.parse(Core.bubbleColor))),
                         child: GestureDetector(
                           onTap: () {},
                           child: const Text(
@@ -559,7 +571,7 @@ class _settings extends State<settings> {
                 IconButton(
                     tooltip: '气泡颜色',
                     onPressed: () {
-                      Color pickColor = bubbleColor;
+                      Color pickColor = Color(int.parse(Core.bubbleColor));
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -567,7 +579,7 @@ class _settings extends State<settings> {
                             title: const Text('Pick a color!'),
                             content: SingleChildScrollView(
                               child: BlockPicker(
-                                pickerColor: bubbleColor,
+                                pickerColor: Color(int.parse(Core.bubbleColor)),
                                 onColorChanged: (Color colorNow) {
                                   pickColor = colorNow;
                                 },
@@ -578,7 +590,7 @@ class _settings extends State<settings> {
                                 child: const Text('Got it'),
                                 onPressed: () {
                                   setState(() {
-                                    bubbleColor = pickColor;
+                                    Core.bubbleColor = pickColor.value.toString();
                                   });
                                   Navigator.of(context).pop();
                                 },
