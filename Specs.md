@@ -1,7 +1,7 @@
 # AlphaB 消息文档
 ### 本篇内容皆采用Socket连接，以json格式发送数据
 
-{"type":String , "id":"String" , ...}
+**{"type":String , "id":"String" , ...}**
 
 ### id
 
@@ -28,19 +28,19 @@
 
 {"type":"connect","id":"01" , "AES key":String}
 
-**AES key使用RSA公钥加密，格式为key:iv**
+**AES key为使用RSA公钥加密后的base64编码，格式为key:iv**
 
 ### message
 
 {"type":"message","id":"02","name":String,  "head color":String, "bubble color":String, "text":String}
 
-| 字段         | 备注       |
-| ------------ | ---------- |
-| id           | 唯一标识符 |
-| name         | 昵称       |
-| head color   | 头像颜色   |
-| bubble color | 气泡颜色   |
-| text         | 消息文本   |
+| 字段         | 备注                              |
+| ------------ | --------------------------------- |
+| id           | 唯一标识符                        |
+| name         | 昵称                              |
+| head color   | 头像颜色                          |
+| bubble color | 气泡颜色                          |
+| text         | 消息文本(采用AES加密后base64编码) |
 
 ### image
 
@@ -87,11 +87,11 @@
 
 {"type":"message", "id":String, "name":String, "text":String , "head color":String, "bubble color":String}
 
-| name         | 昵称            |
-| ------------ | --------------- |
-| text         | 消息（AES加密） |
-| head color   | 头像颜色        |
-| bubble color | 气泡颜色        |
+| name         | 昵称                        |
+| ------------ | --------------------------- |
+| text         | 消息（AES加密后base64编码） |
+| head color   | 头像颜色                    |
+| bubble color | 气泡颜色                    |
 
 ### image
 
