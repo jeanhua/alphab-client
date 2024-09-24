@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:alphab/chat.dart';
+import 'package:alphab/core.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -32,11 +33,11 @@ class alphab extends StatelessWidget {
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
   @override
-  State<StatefulWidget> createState() => _LoginPage();
+  State<StatefulWidget> createState() => LoginPageState();
 }
 
 // 首页
-class _LoginPage extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final textController_ip = TextEditingController();
   final textController_port = TextEditingController();
   // socket
@@ -49,6 +50,13 @@ class _LoginPage extends State<LoginPage> {
     textController_ip.dispose();
     textController_port.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Core.routeToChat = routeToChat;
   }
 
   // 弹出提示框
@@ -136,7 +144,9 @@ class _LoginPage extends State<LoginPage> {
               child: SizedBox(
                 width: 200,
                 child: TextButton(
-                  onPressed: () => {routeToChat()},
+                  onPressed: () => {
+                    Core.connect(textController_ip.text,int.parse(textController_port.text)),
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: const Color.fromARGB(100, 255, 255, 255),
                   ),

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:alphab/core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,12 +8,26 @@ class chatpage extends StatefulWidget {
   chatpage({super.key, required this.pushData});
   final Map pushData;
   @override
-  State<StatefulWidget> createState() => _chatpage();
+  State<StatefulWidget> createState() => chatpageState();
 }
 
-class _chatpage extends State<chatpage> {
+class chatpageState extends State<chatpage> {
   final textController_message = TextEditingController();
   final scrollController_scoll = ScrollController();
+
+  // 刷新页面
+  updatePage(){
+    setState(() {});
+    scrollController_scoll.jumpTo(scrollController_scoll.position.maxScrollExtent);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Core.updatePage = updatePage;
+  }
+
   // 弹出提示框
   void notice_dialog(String noticeText, [String title = "提示"]) {
     showDialog(
@@ -161,7 +173,7 @@ class _chatpage extends State<chatpage> {
   }
 
   // 图片行
-  chatRowImage(BuildContext context, String name, Uint8List image,String size,
+  chatRowImage(BuildContext context, String name, Uint8List image, String size,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
@@ -193,8 +205,12 @@ class _chatpage extends State<chatpage> {
               child: Image.memory(
                 image,
                 color: headNameColor,
-                width: double.parse(size.split('x')[0])<500?double.parse(size.split('x')[0]):500,
-                height: double.parse(size.split('x')[1])<500?double.parse(size.split('x')[0]):500,
+                width: double.parse(size.split('x')[0]) < 500
+                    ? double.parse(size.split('x')[0])
+                    : 500,
+                height: double.parse(size.split('x')[1]) < 500
+                    ? double.parse(size.split('x')[0])
+                    : 500,
                 fit: BoxFit.cover,
                 gaplessPlayback: true,
               ),
@@ -266,6 +282,7 @@ class _chatpage extends State<chatpage> {
                   controller: scrollController_scoll,
                   child: ListView.builder(
                       itemCount: Core.rowMessage.length,
+                      controller: scrollController_scoll,
                       itemBuilder: (BuildContext builContext, int index) {
                         var any = Core.rowMessage[index];
                         if (any['type'] == "message") {
@@ -274,7 +291,7 @@ class _chatpage extends State<chatpage> {
                               any['name'] as String,
                               any['text'] as String,
                               any['id'] as String,
-                              false,
+                              any['isRight'] as bool,
                               Color(int.parse(any['head color'] as String)),
                               Color(int.parse(any['bubble color'] as String)),
                               any['isSuccess'] as bool);
@@ -284,7 +301,7 @@ class _chatpage extends State<chatpage> {
                               any['name'] as String,
                               any['data'] as Uint8List,
                               any['size'] as String,
-                              false,
+                              any['isRight'] as bool,
                               Color(int.parse(any['head color'] as String)),
                               Color(int.parse(any['bubble color'] as String)),
                               any['isSuccess'] as bool);
@@ -330,6 +347,26 @@ class _chatpage extends State<chatpage> {
                 TextButton(
                   onPressed: () {
                     //发送按钮点击事件
+                    String id = Core.getMessageId();
+                    String result =
+                        Core.sendMessage(textController_message.text,id);
+                    Core.rowMessage.add({
+                      'type': 'message',
+                      'id': id,
+                      'name': Core.name,
+                      'text': textController_message.text,
+                      'head color': Core.headColor,
+                      'bubble color': Core.bubbleColor,
+                      'isRight':true,
+                      'isSuccess': false,
+                      'self':true
+                    });
+                    setState((){});
+                    if (result != "success") {
+                      notice_dialog(result);
+                    } else {
+                      textController_message.text = "";
+                    }
                   },
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color>(
