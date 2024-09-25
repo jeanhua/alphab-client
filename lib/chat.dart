@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:alphab/core.dart';
+import 'package:alphab/main.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter/scheduler.dart';
 
 class chatpage extends StatefulWidget {
   chatpage({super.key, required this.pushData});
@@ -14,11 +19,21 @@ class chatpage extends StatefulWidget {
 class chatpageState extends State<chatpage> {
   final textController_message = TextEditingController();
   final scrollController_scoll = ScrollController();
+  var isShowButton = false;
 
   // 刷新页面
-  updatePage(){
+  updatePage() {
     setState(() {});
-    scrollController_scoll.jumpTo(scrollController_scoll.position.maxScrollExtent);
+    // 等待框架渲染完成
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      scrollController_scoll
+          .jumpTo(scrollController_scoll.position.maxScrollExtent);
+    });
+  }
+
+  // 断开连接
+  disconnect() async {
+    notice_dialog("与服务器断开连接！", "提示");
   }
 
   @override
@@ -26,10 +41,12 @@ class chatpageState extends State<chatpage> {
     // TODO: implement initState
     super.initState();
     Core.updatePage = updatePage;
+    Core.disconnect = disconnect;
   }
 
   // 弹出提示框
-  void notice_dialog(String noticeText, [String title = "提示"]) {
+  void notice_dialog(String noticeText,
+      [String title = "提示"]) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -173,7 +190,7 @@ class chatpageState extends State<chatpage> {
   }
 
   // 图片行
-  chatRowImage(BuildContext context, String name, Uint8List image, String size,
+  chatRowImage(BuildContext context, String name, String image, String size,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
@@ -203,14 +220,11 @@ class chatpageState extends State<chatpage> {
                   ),
                   color: bubbleColor),
               child: Image.memory(
-                image,
-                color: headNameColor,
-                width: double.parse(size.split('x')[0]) < 500
+                base64.decoder.convert(image),
+                width: double.parse(size.split('x')[0]) <
+                        MediaQuery.of(context).size.width / 2
                     ? double.parse(size.split('x')[0])
-                    : 500,
-                height: double.parse(size.split('x')[1]) < 500
-                    ? double.parse(size.split('x')[0])
-                    : 500,
+                    : MediaQuery.of(context).size.width / 2,
                 fit: BoxFit.cover,
                 gaplessPlayback: true,
               ),
@@ -239,9 +253,11 @@ class chatpageState extends State<chatpage> {
                   ),
                   color: bubbleColor),
               child: Image.memory(
-                image,
-                color: headNameColor,
-                width: 500,
+                base64.decoder.convert(image),
+                width: double.parse(size.split('x')[0]) <
+                        MediaQuery.of(context).size.width / 2
+                    ? double.parse(size.split('x')[0])
+                    : MediaQuery.of(context).size.width / 2,
                 fit: BoxFit.cover,
                 gaplessPlayback: true,
               ),
@@ -299,21 +315,14 @@ class chatpageState extends State<chatpage> {
                           return chatRowImage(
                               context,
                               any['name'] as String,
-                              any['data'] as Uint8List,
+                              any['data'] as String,
                               any['size'] as String,
                               any['isRight'] as bool,
                               Color(int.parse(any['head color'] as String)),
                               Color(int.parse(any['bubble color'] as String)),
                               any['isSuccess'] as bool);
                         }
-                      })
-                  //ListView(
-                  //   shrinkWrap: true,
-                  //   padding: const EdgeInsets.all(20),
-                  //   children: [
-                  //   ],
-                  // ),
-                  ),
+                      })),
             ),
             Row(
               children: [
@@ -328,6 +337,17 @@ class chatpageState extends State<chatpage> {
                     controller: textController_message,
                     onChanged: (String text) {
                       // 内容改变事件
+                      if (textController_message.text != "" &&
+                          isShowButton == false) {
+                        setState(() {
+                          isShowButton = true;
+                        });
+                      } else if (textController_message.text == "" &&
+                          isShowButton == true) {
+                        setState(() {
+                          isShowButton = false;
+                        });
+                      }
                       if (textController_message.text.split('\n').length > 10) {
                         var textList = textController_message.text.split('\n');
                         var newText = "";
@@ -344,43 +364,47 @@ class chatpageState extends State<chatpage> {
                     },
                   ),
                 )),
-                TextButton(
-                  onPressed: () {
-                    //发送按钮点击事件
-                    String id = Core.getMessageId();
-                    String result =
-                        Core.sendMessage(textController_message.text,id);
-                    Core.rowMessage.add({
-                      'type': 'message',
-                      'id': id,
-                      'name': Core.name,
-                      'text': textController_message.text,
-                      'head color': Core.headColor,
-                      'bubble color': Core.bubbleColor,
-                      'isRight':true,
-                      'isSuccess': false,
-                      'self':true
-                    });
-                    setState((){});
-                    if (result != "success") {
-                      notice_dialog(result);
-                    } else {
-                      textController_message.text = "";
-                    }
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                      (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.pressed)) {
-                          return Colors.red.withOpacity(0.5); // 按下时的颜色
+                Visibility(
+                    visible: isShowButton,
+                    child: TextButton(
+                      onPressed: () {
+                        //发送按钮点击事件
+                        if (textController_message.text == "") {
+                          return;
                         }
-                        return Colors.blue; // 默认背景颜色
+                        String id = Core.getMessageId();
+                        String result =
+                            Core.sendMessage(textController_message.text, id);
+                        Core.rowMessage.add({
+                          'type': 'message',
+                          'id': id,
+                          'name': Core.name,
+                          'text': textController_message.text,
+                          'head color': Core.headColor,
+                          'bubble color': Core.bubbleColor,
+                          'isRight': true,
+                          'isSuccess': false,
+                        });
+                        setState(() {});
+                        if (result != "success") {
+                          notice_dialog(result);
+                        } else {
+                          textController_message.text = "";
+                        }
                       },
-                    ),
-                  ),
-                  child: const Text("发送",
-                      style: TextStyle(color: Colors.yellow, fontSize: 25)),
-                )
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                          (Set<WidgetState> states) {
+                            if (states.contains(WidgetState.pressed)) {
+                              return Colors.red.withOpacity(0.5); // 按下时的颜色
+                            }
+                            return Colors.blue; // 默认背景颜色
+                          },
+                        ),
+                      ),
+                      child: const Text("发送",
+                          style: TextStyle(color: Colors.yellow, fontSize: 25)),
+                    ))
               ],
             ),
             const Divider(
@@ -416,8 +440,39 @@ class chatpageState extends State<chatpage> {
                     tooltip: '设置',
                   ),
                   IconButton(
-                    onPressed: () {
-                      notice_dialog("还没做好🤣");
+                    onPressed: () async {
+                      late File file;
+                      FilePickerResult? isFile = await FilePicker.platform
+                          .pickFiles(
+                              type: FileType.custom,
+                              allowedExtensions: ["jpg", "jpeg", "png"]);
+                      if (isFile != null) {
+                        file = File(isFile.files.single.path!);
+                      } else {
+                        return;
+                      }
+                      var imageBytes = file.readAsBytesSync();
+                      var image = await decodeImageFromList(imageBytes);
+                      String id = Core.getMessageId();
+                      var bs64 = base64Encode(imageBytes);
+                      String size = "${image.width}x${image.height}";
+                      String result = Core.sendImage(bs64,id,size);
+                      Core.rowMessage.add({
+                        'type': 'image',
+                        'id': id,
+                        'name': Core.name,
+                        'data': bs64,
+                        'head color': Core.headColor,
+                        'isRight': true,
+                        'bubble color': Core.bubbleColor,
+                        'size': size,
+                        'isSuccess': false,
+                      });
+                      print("${image.width}x${image.height}");
+                      setState(() {});
+                      if (result != "success") {
+                        notice_dialog(result);
+                      }
                     },
                     icon: const Icon(Icons.image),
                     tooltip: '发送图片',

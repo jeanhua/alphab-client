@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:alphab/chat.dart';
 import 'package:alphab/core.dart';
@@ -57,6 +58,11 @@ class LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     Core.routeToChat = routeToChat;
+    if(File("./config.json").existsSync()){
+      var jsonConfig = jsonDecode(File("./config.json").readAsStringSync());
+      textController_ip.text = jsonConfig['ip'];
+      textController_port.text = jsonConfig['port'];
+    }
   }
 
   // 弹出提示框
@@ -145,6 +151,8 @@ class LoginPageState extends State<LoginPage> {
                 width: 200,
                 child: TextButton(
                   onPressed: () => {
+                    Core.ip = textController_ip.text,
+                    Core.port = textController_port.text,
                     Core.connect(textController_ip.text,int.parse(textController_port.text)),
                   },
                   style: TextButton.styleFrom(
