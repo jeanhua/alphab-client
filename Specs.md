@@ -1,5 +1,5 @@
 # AlphaB 消息文档
-### 本篇内容皆采用Socket连接，AES加密后以json格式发送数据(base64编码)
+### 本篇内容皆采用WebSocket连接，AES加密后以json格式发送数据(base64编码)
 
 **{"type":String , "id":"String" , ...}**
 
@@ -11,14 +11,15 @@
 
 ### type
 
-| type               | remark     |
-| ------------------ | ---------- |
-| "connect"          | 连接服务器 |
-| "callback"         | 消息回调   |
-| "message"          | 文本消息   |
-| "image"            | 图片消息   |
-| "disposable image" | 闪照消息   |
-| "audio"            | 音频消息   |
+| type               | remark                     |
+| ------------------ | -------------------------- |
+| "connect"          | 连接服务器                 |
+| "callback"         | 消息回调                   |
+| "message"          | 文本消息                   |
+| "image"            | 图片消息                   |
+| "disposable image" | 闪照消息                   |
+| "audio"            | 音频消息                   |
+| "data"             | 图片、音频数据base64的分片 |
 
 ### connect
 
@@ -52,8 +53,8 @@
 | name       | 昵称       |
 | head color | 头像颜色   |
 | bubble color | 气泡颜色   |
-| data       | 图片(base64编码) |
 | size | 尺寸，如"300x400" |
+| data | base64数据 |
 
 ### disposable image
 
@@ -65,8 +66,8 @@
 | name       | 昵称       |
 | head color | 头像颜色   |
 | bubble color | 气泡颜色   |
-| data       | 图片(base64编码) |
 | size | 尺寸，如"300x400" |
+| data | base64数据 |
 
 ### audio
 
@@ -78,7 +79,7 @@
 | name       | 昵称       |
 | head color | 头像颜色   |
 | bubble color | 气泡颜色   |
-| data       | 音频(base64编码) |
+| data | base64数据 |
 
 ## 前端被动接收
 

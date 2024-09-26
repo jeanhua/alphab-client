@@ -13,7 +13,7 @@ class Core {
   Core();
   static late String ip;
   static late String port;
-  static Socket? _server;
+  static WebSocket? _server;
   static String? _AesKey;
   static var _publicKey;
   static var _privateKey;
@@ -22,7 +22,7 @@ class Core {
   static bool isConnect = false;
   // 全局消息链
   static var rowMessage = [];
-  static String headColor = material.Colors.blue.value.toString();
+  static String headColor = material.Colors.black.value.toString();
   static String bubbleColor = material.Colors.white.value.toString();
   static String name = "匿名";
 
@@ -68,7 +68,7 @@ class Core {
   }
 
   static connect(String ip, int port) {
-    Socket.connect(ip, port).then((socket) async {
+    WebSocket.connect("ws://$ip:$port").then((socket) async {
       _server = socket;
       Map message = {};
       _connectId = getMessageId();
@@ -77,7 +77,7 @@ class Core {
       message['id'] = _connectId;
       message['public key'] = await File('./Key/publicKey.pem').readAsString();
       String jsonMessage = json.encode(message);
-      _server?.write(jsonMessage);
+      _server?.add(jsonMessage);
       _server?.listen((data) async {
         _messageDeal(utf8.decode(data));
       }, onError: (error) {
@@ -235,7 +235,7 @@ class Core {
       message['text'] = text;
       String jsonMessage = json.encode(message);
       var encryptMessage = AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
-      _server?.write(encryptMessage);
+      _server?.add(encryptMessage);
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
@@ -256,7 +256,7 @@ class Core {
       message['data'] = image_bs64;
       message['size'] = size;
       String jsonMessage = json.encode(message);
-      _server?.write(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
@@ -276,7 +276,7 @@ class Core {
       message['bubble color'] = bubbleColor;
       message['data'] =  audio;
       String jsonMessage = json.encode(message);
-      _server?.write(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
@@ -297,7 +297,7 @@ class Core {
       message['data'] = image_bs64;
       message['size'] = size;
       String jsonMessage = json.encode(message);
-      _server?.write(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
