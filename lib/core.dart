@@ -5,6 +5,7 @@ import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:http/http.dart' as http;
+import 'dart:math';
 
 class Core {
   static late VoidCallback routeToChat;
@@ -27,48 +28,90 @@ class Core {
   static var rowMessage = [];
   static String headColor = material.Colors.yellow.value.toString();
   static String bubbleColor = material.Colors.white.value.toString();
-  static String name = "匿名";
+  static String name = getRandomName();
 
   static _generateRsaKey() async {
-    final headers = {
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Origin': 'https://www.bejson.com',
-      'Pragma': 'no-cache',
-      'Referer': 'https://www.bejson.com/enc/rsa/',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-origin',
-      'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
-      'X-Requested-With': 'XMLHttpRequest',
-      'sec-ch-ua':
-          '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"',
-    };
-    var data = {
-      'rsaLength': '2048',
-      'rsaFormat': 'PKCS#1',
-      'rsaPass': '',
-    };
-    var url = Uri.parse('https://www.bejson.com/Bejson/Api/Rsa/getRsaKey');
-    final res = await http.post(url, headers: headers, body: data);
-    final status = res.statusCode;
-    if (status != 200) throw Exception('http.post error: statusCode= $status');
-    var result = json.decode(res.body);
-    var dir = Directory("./Key");
-    if (!dir.existsSync()) {
-      dir.create();
+    if(!File("./Key/publicKey.pem").existsSync() || !File("./Key/privateKey.pem").existsSync()){
+      final headers = {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin': 'https://www.bejson.com',
+        'Pragma': 'no-cache',
+        'Referer': 'https://www.bejson.com/enc/rsa/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
+        'X-Requested-With': 'XMLHttpRequest',
+        'sec-ch-ua':
+        '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+      };
+      var data = {
+        'rsaLength': '2048',
+        'rsaFormat': 'PKCS#1',
+        'rsaPass': '',
+      };
+      var url = Uri.parse('https://www.bejson.com/Bejson/Api/Rsa/getRsaKey');
+      final res = await http.post(url, headers: headers, body: data);
+      final status = res.statusCode;
+      if (status != 200) throw Exception('http.post error: statusCode= $status');
+      var result = json.decode(res.body);
+      var dir = Directory("./Key");
+      if (!dir.existsSync()) {
+        dir.create();
+      }
+      await File("./Key/publicKey.pem").writeAsString(result['data']['public']);
+      await File("./Key/privateKey.pem").writeAsString(result['data']['private']);
     }
-    await File("./Key/publicKey.pem").writeAsString(result['data']['public']);
-    await File("./Key/privateKey.pem").writeAsString(result['data']['private']);
     _publicKey =
-        encrypt.RSAKeyParser().parse(result['data']['public'] as String);
-    _privateKey = result['data']['private'];
+        encrypt.RSAKeyParser().parse(File("./Key/publicKey.pem").readAsStringSync());
+    _privateKey = File("./Key/privateKey.pem").readAsStringSync();
+  }
+
+  static getRandomName() {
+    List<String> romanticUsernames = [
+      "星河滚烫",
+      "你是人间理想",
+      "月色真美",
+      "刚好遇见你",
+      "心动瞬间",
+      "甜蜜梦境",
+      "温柔如你",
+      "浪漫满屋",
+      "花前月下",
+      "情书予你",
+      "诗酒趁年华",
+      "余生请指教",
+      "风花雪月",
+      "海枯石烂",
+      "陪你去看海",
+      "心之所向",
+      "玫瑰情话",
+      "甜蜜约定",
+      "恋恋不忘",
+      "爱在心口难开",
+      "白头偕老",
+      "深情不及久伴",
+      "你是我眼中的星",
+      "岁月静好",
+      "相濡以沫",
+      "心有灵犀",
+      "红尘有你",
+      "爱的诺言",
+      "情定三生",
+      "一眼万年",
+      "温柔岁月",
+      "浪漫至死不渝"
+    ];
+    Random random = Random();
+    int index = random.nextInt(romanticUsernames.length);
+    return romanticUsernames[index];
   }
 
   static connect(String ip, int port) {
