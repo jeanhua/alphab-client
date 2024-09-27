@@ -669,6 +669,8 @@ class chatpageState extends State<chatpage> {
                       onPressed: () {
                         setState(() {
                           emojiShow = !emojiShow;
+                          scrollController_scoll
+                              .jumpTo(scrollController_scoll.position.maxScrollExtent);
                         });
                       },
                       icon: const Icon(Icons.emoji_emotions),
