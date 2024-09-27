@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' as material;
@@ -20,9 +20,12 @@ class Core {
   static int _count = 0;
   static String _connectId = "";
   static bool isConnect = false;
+  static bool waitForDimage = false;
+  // 音频
+  static AudioPlayer player = new AudioPlayer();
   // 全局消息链
   static var rowMessage = [];
-  static String headColor = material.Colors.black.value.toString();
+  static String headColor = material.Colors.yellow.value.toString();
   static String bubbleColor = material.Colors.white.value.toString();
   static String name = "匿名";
 
@@ -63,7 +66,8 @@ class Core {
     }
     await File("./Key/publicKey.pem").writeAsString(result['data']['public']);
     await File("./Key/privateKey.pem").writeAsString(result['data']['private']);
-    _publicKey = encrypt.RSAKeyParser().parse(result['data']['public'] as String);
+    _publicKey =
+        encrypt.RSAKeyParser().parse(result['data']['public'] as String);
     _privateKey = result['data']['private'];
   }
 
@@ -99,7 +103,8 @@ class Core {
   static String AesEncrypt(String content, String _key, String _iv) {
     var key = encrypt.Key.fromUtf8(_key);
     var iv = encrypt.IV.fromUtf8(_iv);
-    var encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+    var encrypter =
+        encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
     var encrypted = encrypter.encrypt(content, iv: iv);
     return encrypted.base64;
   }
@@ -107,8 +112,10 @@ class Core {
   static String AesDecrypt(String content, String _key, String _iv) {
     var key = encrypt.Key.fromUtf8(_key);
     var iv = encrypt.IV.fromUtf8(_iv);
-    var encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
-    var decrypted = encrypter.decrypt(encrypt.Encrypted.from64(content), iv: iv);
+    var encrypter =
+        encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+    var decrypted =
+        encrypter.decrypt(encrypt.Encrypted.from64(content), iv: iv);
     return decrypted;
   }
 
@@ -117,17 +124,18 @@ class Core {
       if (!isConnect) {
         var result = json.decode(data);
         if (result['type'] == 'connect' && result['id'] == _connectId) {
-          _AesKey = await RSAdecodeString(result['AES key'].toString().replaceAll("\\u002B", "+"), _privateKey);
+          _AesKey = await RSAdecodeString(
+              result['AES key'].toString().replaceAll("\\u002B", "+"),
+              _privateKey);
           Core.isConnect = true;
           late String config;
-          if(File("./config.json").existsSync()){
+          if (File("./config.json").existsSync()) {
             config = File("./config.json").readAsStringSync();
             var jsonconfig = jsonDecode(config);
             jsonconfig['ip'] = ip;
             jsonconfig['port'] = port;
             File("./config.json").writeAsString(jsonEncode(jsonconfig));
-          }
-          else{
+          } else {
             Map configjson = new Map();
             configjson['ip'] = ip;
             configjson['port'] = port;
@@ -136,7 +144,8 @@ class Core {
           routeToChat();
         }
       } else {
-        var result = json.decode(AesDecrypt(data, _AesKey!.split(':')[0], _AesKey!.split(':')[1]));
+        var result = json.decode(
+            AesDecrypt(data, _AesKey!.split(':')[0], _AesKey!.split(':')[1]));
         var type = result['type'];
         // <-----------------------消息处理开始----------------------->
         // 主动接收
@@ -147,10 +156,11 @@ class Core {
             'name': result['name'],
             'text': result['text'],
             'head color': result['head color'],
-            'isRight':false,
+            'isRight': false,
             'bubble color': result['bubble color'],
             'isSuccess': false,
           });
+          player.play(AssetSource("receive.mp3"));
         } else if (type == 'image') {
           rowMessage.add({
             'type': 'image',
@@ -158,12 +168,13 @@ class Core {
             'name': result['name'],
             'data': result['data'],
             'head color': result['head color'],
-            'isRight':false,
+            'isRight': false,
             'bubble color': result['bubble color'],
             'size': result['size'],
             'isSuccess': false,
             'isAlready': false
           });
+          player.play(AssetSource("receive.mp3"));
         } else if (type == 'disposable image') {
           rowMessage.add({
             'type': 'disposable image',
@@ -172,11 +183,13 @@ class Core {
             'data': result['data'],
             'head color': result['head color'],
             'bubble color': result['bubble color'],
-            'isRight':false,
+            'isRight': false,
             'size': result['size'],
             'isSuccess': false,
-            'isAlready': false
+            'isAlready': false,
+            'isRead': false
           });
+          player.play(AssetSource("receive.mp3"));
         } else if (type == 'audio') {
           rowMessage.add({
             'type': 'audio',
@@ -185,16 +198,28 @@ class Core {
             'data': result['data'],
             'head color': result['head color'],
             'bubble color': result['bubble color'],
-            'isRight':false,
+            'isRight': false,
             'isSuccess': false,
             'isAlready': false
           });
-        }
-        else if(type == 'data'){
-          for(var i in rowMessage){
-            if(i["id"] == result['id']){
-              i['isAlready'] = true;
-              i['data'] = result['data'];
+          player.play(AssetSource("receive.mp3"));
+        } else if (type == 'data') {
+          for (var i in rowMessage) {
+            if (i["id"] == result['id']) {
+              if (i["type"] == "disposable image") {
+                waitForDimage = true;
+                i['isAlready'] = true;
+                i['data'] = result['data'];
+                Future.delayed(const Duration(seconds: 5), () {
+                  i['data'] = "";
+                  i['isRead'] = true;
+                  updatePage();
+                  waitForDimage = false;
+                });
+              } else {
+                i['isAlready'] = true;
+                i['data'] = result['data'];
+              }
             }
           }
         }
@@ -232,8 +257,8 @@ class Core {
 
   // <-----------------------消息发送区域开始----------------------->
 
-  static String sendMessage(String text,String messageId) {
-    if (_server == null || _AesKey == null || isConnect==false) {
+  static String sendMessage(String text, String messageId) {
+    if (_server == null || _AesKey == null || isConnect == false) {
       return "disconnect";
     }
     try {
@@ -245,7 +270,8 @@ class Core {
       message['bubble color'] = bubbleColor;
       message['text'] = text;
       String jsonMessage = json.encode(message);
-      var encryptMessage = AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
+      var encryptMessage = AesEncrypt(
+          jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
       _server?.add(encryptMessage);
       return "success";
     } catch (e) {
@@ -254,7 +280,7 @@ class Core {
   }
 
   static String getDataBase64(String id) {
-    if (_server == null || _AesKey == null || isConnect==false) {
+    if (_server == null || _AesKey == null || isConnect == false) {
       return "disconnect";
     }
     try {
@@ -262,7 +288,8 @@ class Core {
       message['type'] = "data";
       message['id'] = id;
       String jsonMessage = json.encode(message);
-      var encryptMessage = AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
+      var encryptMessage = AesEncrypt(
+          jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
       _server?.add(encryptMessage);
       return "success";
     } catch (e) {
@@ -270,8 +297,8 @@ class Core {
     }
   }
 
-  static String sendImage(String image_bs64,String messageId,String size) {
-    if (_server == null || _AesKey == null || isConnect==false) {
+  static String sendImage(String image_bs64, String messageId, String size) {
+    if (_server == null || _AesKey == null || isConnect == false) {
       return "disconnect";
     }
     try {
@@ -284,15 +311,16 @@ class Core {
       message['data'] = image_bs64;
       message['size'] = size;
       String jsonMessage = json.encode(message);
-      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(
+          jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
     }
   }
 
-  static String sendAudio(String audio,String messageId) {
-    if (_server == null || _AesKey == null || isConnect==false) {
+  static String sendAudio(String audio, String messageId) {
+    if (_server == null || _AesKey == null || isConnect == false) {
       return "disconnect";
     }
     try {
@@ -302,17 +330,19 @@ class Core {
       message['name'] = name;
       message['head color'] = headColor;
       message['bubble color'] = bubbleColor;
-      message['data'] =  audio;
+      message['data'] = audio;
       String jsonMessage = json.encode(message);
-      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(
+          jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";
     }
   }
 
-  static String sendDisposableImage(String image_bs64,String messageId,String size) {
-    if (_server == null || _AesKey == null || isConnect==false) {
+  static String sendDisposableImage(
+      String image_bs64, String messageId, String size) {
+    if (_server == null || _AesKey == null || isConnect == false) {
       return "disconnect";
     }
     try {
@@ -325,7 +355,8 @@ class Core {
       message['data'] = image_bs64;
       message['size'] = size;
       String jsonMessage = json.encode(message);
-      _server?.add(AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
+      _server?.add(AesEncrypt(
+          jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]));
       return "success";
     } catch (e) {
       return "error:${e.toString()}";

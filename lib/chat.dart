@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alphab/core.dart';
-import 'package:alphab/main.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 class chatpage extends StatefulWidget {
   chatpage({super.key, required this.pushData});
@@ -20,6 +22,7 @@ class chatpageState extends State<chatpage> {
   final textController_message = TextEditingController();
   final scrollController_scoll = ScrollController();
   var isShowButton = false;
+  var emojiShow = false;
 
   // 刷新页面
   updatePage() {
@@ -42,6 +45,7 @@ class chatpageState extends State<chatpage> {
     super.initState();
     Core.updatePage = updatePage;
     Core.disconnect = disconnect;
+    Core.player.audioCache.prefix = "assets/audios/";
   }
 
   // 弹出提示框
@@ -97,7 +101,7 @@ class chatpageState extends State<chatpage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Image(
-            image: const AssetImage('images/head.png'),
+            image: const AssetImage('assets/images/head.png'),
             height: 50,
             color: headNameColor,
           ),
@@ -145,8 +149,10 @@ class chatpageState extends State<chatpage> {
         children: [
           Tooltip(
               message: isSuccess ? "发送成功" : "发送中",
-              child:
-                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
+              child: Icon(
+                isSuccess ? Icons.check_circle : Icons.update_rounded,
+                color: Colors.lightGreen,
+              )),
           Padding(
             padding: const EdgeInsets.all(15),
             child: Container(
@@ -179,7 +185,7 @@ class chatpageState extends State<chatpage> {
             style: TextStyle(color: headNameColor, fontSize: 25),
           ),
           Image(
-            image: const AssetImage('images/head.png'),
+            image: const AssetImage('assets/images/head.png'),
             height: 50,
             color: headNameColor,
           ),
@@ -202,7 +208,7 @@ class chatpageState extends State<chatpage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Image(
-              image: const AssetImage("./images/head.png"),
+              image: const AssetImage("assets/images/head.png"),
               color: headNameColor,
               height: 50),
           Text(
@@ -222,7 +228,7 @@ class chatpageState extends State<chatpage> {
                   color: bubbleColor),
               child: GestureDetector(
                 onTap: () {
-                  if(isAlready){
+                  if (isAlready) {
                     return;
                   }
                   var res = Core.getDataBase64(id);
@@ -230,20 +236,24 @@ class chatpageState extends State<chatpage> {
                     notice_dialog(res);
                   }
                 },
-                child: isAlready == false ? const Image(image: AssetImage("images/loadImage.png")):Image.memory(
-                  base64.decoder.convert(image),
-                  width: double.parse(size.split('x')[0]) <
-                      MediaQuery.of(context).size.width / 2
-                      ? double.parse(size.split('x')[0])
-                      : MediaQuery.of(context).size.width / 2,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                ),
+                child: isAlready == false
+                    ? const Image(
+                        image: AssetImage("assets/images/loadImage.png"))
+                    : Image.memory(
+                        base64.decoder.convert(image),
+                        width: double.parse(size.split('x')[0]) <
+                                MediaQuery.of(context).size.width / 2
+                            ? double.parse(size.split('x')[0])
+                            : MediaQuery.of(context).size.width / 2,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      ),
               ),
             ),
           ),
         ],
       );
+      // 右边气泡
     } else {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,8 +261,10 @@ class chatpageState extends State<chatpage> {
         children: [
           Tooltip(
               message: isSuccess ? "发送成功" : "发送中",
-              child:
-                  Icon(isSuccess ? Icons.check_circle : Icons.update_rounded)),
+              child: Icon(
+                isSuccess ? Icons.check_circle : Icons.update_rounded,
+                color: Colors.lightGreen,
+              )),
           Padding(
             padding: const EdgeInsets.all(15),
             child: Container(
@@ -267,7 +279,7 @@ class chatpageState extends State<chatpage> {
               child: Image.memory(
                 base64.decoder.convert(image),
                 width: double.parse(size.split('x')[0]) <
-                    MediaQuery.of(context).size.width / 2
+                        MediaQuery.of(context).size.width / 2
                     ? double.parse(size.split('x')[0])
                     : MediaQuery.of(context).size.width / 2,
                 fit: BoxFit.cover,
@@ -280,12 +292,83 @@ class chatpageState extends State<chatpage> {
             style: TextStyle(color: headNameColor, fontSize: 25),
           ),
           Image(
-              image: const AssetImage("./images/head.png"),
+              image: const AssetImage("assets/images/head.png"),
               color: headNameColor,
               height: 50),
         ],
       );
     }
+  }
+
+  chatRowDimage(
+      BuildContext context, String id, String name, String image, String size,
+      [Color headNameColor = Colors.blue,
+      Color bubbleColor = Colors.grey,
+      bool isSuccess = false,
+      bool isAlready = false,
+      bool isRead = false]) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Image(
+            image: const AssetImage("assets/images/head.png"),
+            color: headNameColor,
+            height: 50),
+        Text(
+          name,
+          style: TextStyle(color: headNameColor, fontSize: 25),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(15),
+          child: Container(
+            decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(0),
+                  topRight: Radius.circular(16.0),
+                  bottomLeft: Radius.circular(16.0),
+                  bottomRight: Radius.circular(16.0),
+                ),
+                color: bubbleColor),
+            child: GestureDetector(
+              onTap: () {
+                if (isAlready) {
+                  return;
+                }
+                if (Core.waitForDimage) {
+                  return;
+                }
+                var res = Core.getDataBase64(id);
+                if (res != "success") {
+                  notice_dialog(res);
+                }
+              },
+              child: isAlready == false
+                  ? const Image(image: AssetImage("assets/images/Dimage.png"))
+                  : (isRead
+                      ? const Image(
+                          image: AssetImage("assets/images/broken.png"))
+                      : Image.memory(
+                          base64.decoder.convert(image),
+                          width: double.parse(size.split('x')[0]) <
+                                  MediaQuery.of(context).size.width / 2
+                              ? double.parse(size.split('x')[0])
+                              : MediaQuery.of(context).size.width / 2,
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                        )),
+            ),
+          ),
+        ),
+        const Tooltip(
+          message: "闪照消息",
+          child: Icon(
+            Icons.image_not_supported,
+            color: Colors.lightGreen,
+          ),
+        ),
+      ],
+    );
   }
   // <-----------------------消息行生成结束----------------------->
 
@@ -300,7 +383,8 @@ class chatpageState extends State<chatpage> {
         body: Container(
           decoration: const BoxDecoration(
               image: DecorationImage(
-                  image: AssetImage('images/bg.jpg'), fit: BoxFit.cover)),
+                  image: AssetImage('assets/images/bg1.png'),
+                  fit: BoxFit.cover)),
           child: Column(children: [
             Expanded(
               child: Scrollbar(
@@ -334,8 +418,19 @@ class chatpageState extends State<chatpage> {
                               Color(int.parse(any['head color'] as String)),
                               Color(int.parse(any['bubble color'] as String)),
                               any['isSuccess'] as bool,
-                              any['isAlready'] as bool
-                          );
+                              any['isAlready'] as bool);
+                        } else if (any['type'] == 'disposable image') {
+                          return chatRowDimage(
+                              context,
+                              any['id'] as String,
+                              any['name'] as String,
+                              any['data'] as String,
+                              any['size'] as String,
+                              Color(int.parse(any['head color'] as String)),
+                              Color(int.parse(any['bubble color'] as String)),
+                              any['isSuccess'] as bool,
+                              any['isAlready'] as bool,
+                              any['isRead'] as bool);
                         }
                       })),
             ),
@@ -382,7 +477,7 @@ class chatpageState extends State<chatpage> {
                 Visibility(
                     visible: isShowButton,
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         //发送按钮点击事件
                         if (textController_message.text == "") {
                           return;
@@ -390,20 +485,21 @@ class chatpageState extends State<chatpage> {
                         String id = Core.getMessageId();
                         String result =
                             Core.sendMessage(textController_message.text, id);
-                        Core.rowMessage.add({
-                          'type': 'message',
-                          'id': id,
-                          'name': Core.name,
-                          'text': textController_message.text,
-                          'head color': Core.headColor,
-                          'bubble color': Core.bubbleColor,
-                          'isRight': true,
-                          'isSuccess': false,
-                        });
-                        setState(() {});
                         if (result != "success") {
                           notice_dialog(result);
                         } else {
+                          Core.rowMessage.add({
+                            'type': 'message',
+                            'id': id,
+                            'name': Core.name,
+                            'text': textController_message.text,
+                            'head color': Core.headColor,
+                            'bubble color': Core.bubbleColor,
+                            'isRight': true,
+                            'isSuccess': false,
+                          });
+                          setState(() {});
+                          await Core.player.play(AssetSource('send.wav'));
                           textController_message.text = "";
                         }
                       },
@@ -434,96 +530,191 @@ class chatpageState extends State<chatpage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: () async {
-                      var ret =
-                          await Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => settings(
-                                    headColorBefore:
-                                        Color(int.parse(Core.headColor)),
-                                    bubbleColorBefore:
-                                        Color(int.parse(Core.bubbleColor)),
-                                    nickName: Core.name,
-                                  )));
-                      setState(() {
-                        Core.headColor = ret['headColor'].value.toString();
-                        Core.bubbleColor = ret['bubbleColor'].value.toString();
-                        Core.name = ret['nickName'];
-                      });
+                  MouseRegion(
+                    onEnter: (_) {
+                      Core.player.play(AssetSource("click.mp3"));
                     },
-                    icon: const Icon(Icons.settings),
-                    tooltip: '设置',
+                    child: IconButton(
+                      onPressed: () async {
+                        var ret =
+                            await Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => settings(
+                                      headColorBefore:
+                                          Color(int.parse(Core.headColor)),
+                                      bubbleColorBefore:
+                                          Color(int.parse(Core.bubbleColor)),
+                                      nickName: Core.name,
+                                    )));
+                        setState(() {
+                          Core.headColor = ret['headColor'].value.toString();
+                          Core.bubbleColor =
+                              ret['bubbleColor'].value.toString();
+                          Core.name = ret['nickName'];
+                        });
+                      },
+                      icon: const Icon(Icons.settings),
+                      tooltip: '设置',
+                    ),
                   ),
-                  IconButton(
-                    onPressed: () async {
-                      late File file;
-                      FilePickerResult? isFile = await FilePicker.platform
-                          .pickFiles(
-                              type: FileType.custom,
-                              allowedExtensions: ["jpg", "jpeg", "png"]);
-                      if (isFile != null) {
-                        file = File(isFile.files.single.path!);
-                      } else {
-                        return;
-                      }
-                      var imageBytes = file.readAsBytesSync();
-                      var image = await decodeImageFromList(imageBytes);
-                      String id = Core.getMessageId();
-                      var bs64 = base64Encode(imageBytes);
-                      String size = "${image.width}x${image.height}";
-                      String result = Core.sendImage(bs64, id, size);
-                      Core.rowMessage.add({
-                        'type': 'image',
-                        'id': id,
-                        'name': Core.name,
-                        'data': bs64,
-                        'head color': Core.headColor,
-                        'isRight': true,
-                        'bubble color': Core.bubbleColor,
-                        'size': size,
-                        'isSuccess': false,
-                        'isAlready':true,
-                      });
-                      print("${image.width}x${image.height}");
-                      setState(() {});
-                      if (result != "success") {
-                        notice_dialog(result);
-                      }
+                  MouseRegion(
+                    onEnter: (_) {
+                      Core.player.play(AssetSource("click.mp3"));
                     },
-                    icon: const Icon(Icons.image),
-                    tooltip: '发送图片',
+                    child: IconButton(
+                      onPressed: () async {
+                        late File file;
+                        FilePickerResult? isFile = await FilePicker.platform
+                            .pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: ["jpg", "jpeg", "png"]);
+                        if (isFile != null) {
+                          file = File(isFile.files.single.path!);
+                        } else {
+                          return;
+                        }
+                        var imageBytes = file.readAsBytesSync();
+                        var image = await decodeImageFromList(imageBytes);
+                        String id = Core.getMessageId();
+                        var bs64 = base64Encode(imageBytes);
+                        String size = "${image.width}x${image.height}";
+                        String result = Core.sendImage(bs64, id, size);
+                        if (result != "success") {
+                          notice_dialog(result);
+                        } else {
+                          Core.rowMessage.add({
+                            'type': 'image',
+                            'id': id,
+                            'name': Core.name,
+                            'data': bs64,
+                            'head color': Core.headColor,
+                            'isRight': true,
+                            'bubble color': Core.bubbleColor,
+                            'size': size,
+                            'isSuccess': false,
+                            'isAlready': true,
+                          });
+                          Core.player.play(AssetSource("send.wav"));
+                          setState(() {});
+                        }
+                      },
+                      icon: const Icon(Icons.image),
+                      tooltip: '发送图片',
+                    ),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      notice_dialog("还没做好🤣");
+                  MouseRegion(
+                    onEnter: (_) {
+                      Core.player.play(AssetSource("click.mp3"));
                     },
-                    icon: const Icon(Icons.image_not_supported_sharp),
-                    tooltip: '发送闪照',
+                    child: IconButton(
+                      onPressed: () async {
+                        late File file;
+                        FilePickerResult? isFile = await FilePicker.platform
+                            .pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: ["jpg", "jpeg", "png"]);
+                        if (isFile != null) {
+                          file = File(isFile.files.single.path!);
+                        } else {
+                          return;
+                        }
+                        var imageBytes = file.readAsBytesSync();
+                        var image = await decodeImageFromList(imageBytes);
+                        String id = Core.getMessageId();
+                        var bs64 = base64Encode(imageBytes);
+                        String size = "${image.width}x${image.height}";
+                        String result =
+                            Core.sendDisposableImage(bs64, id, size);
+                        if (result != "success") {
+                          notice_dialog(result);
+                        } else {
+                          Core.rowMessage.add({
+                            'type': 'image',
+                            'id': id,
+                            'name': Core.name,
+                            'data': bs64,
+                            'head color': Core.headColor,
+                            'isRight': true,
+                            'bubble color': Core.bubbleColor,
+                            'size': size,
+                            'isSuccess': false,
+                            'isAlready': true,
+                          });
+                          Core.player.play(AssetSource("send.wav"));
+                          setState(() {});
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.image_not_supported_sharp,
+                      ),
+                      tooltip: '发送闪照',
+                    ),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      notice_dialog("还没做好🤣");
+                  MouseRegion(
+                    onEnter: (_) {
+                      Core.player.play(AssetSource("click.mp3"));
                     },
-                    icon: const Icon(Icons.keyboard_voice),
-                    tooltip: '发送语音',
+                    child: IconButton(
+                      onPressed: () {
+                        notice_dialog("还没做好🤣");
+                      },
+                      icon: const Icon(Icons.keyboard_voice),
+                      tooltip: '发送语音',
+                    ),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      notice_dialog("还没做好🤣");
+                  MouseRegion(
+                    onEnter: (_) {
+                      Core.player.play(AssetSource("click.mp3"));
                     },
-                    icon: const Icon(Icons.voice_chat),
-                    tooltip: '语音通话',
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      notice_dialog("还没做好🤣");
-                    },
-                    icon: const Icon(Icons.video_call),
-                    tooltip: '视频通话',
-                  ),
+                    child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          emojiShow = !emojiShow;
+                        });
+                      },
+                      icon: const Icon(Icons.emoji_emotions),
+                      tooltip: '发送emoji',
+                    ),
+                  )
                 ],
               ),
             ),
+            Visibility(
+              visible: emojiShow,
+              child: Container(
+                decoration: const BoxDecoration(
+                    color: Color.fromARGB(100, 255, 255, 255)),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height / 2,
+                      child: EmojiPicker(
+                        onEmojiSelected: (Category? category, Emoji emoji) {
+                          // Do something when emoji is tapped (optional)
+                        },
+                        onBackspacePressed: () {
+                          // Do something when the user taps the backspace button (optional)
+                          // Set it to null to hide the Backspace-Button
+                        },
+                        textEditingController: textController_message, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
+                        config: const Config(
+                          height: 256,
+                          //bgColor: const Color(0xFFF2F2F2),
+                          checkPlatformCompatibility: true,
+                          emojiViewConfig: EmojiViewConfig(
+                          ),
+                          swapCategoryAndBottomBar:  false,
+                          skinToneConfig: SkinToneConfig(),
+                          categoryViewConfig: CategoryViewConfig(),
+                          bottomActionBarConfig: BottomActionBarConfig(),
+                          searchViewConfig: SearchViewConfig(),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            )
           ]),
         ));
   }
@@ -576,7 +767,7 @@ class _settings extends State<settings> {
       body: Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage("images/bg.jpg"), fit: BoxFit.cover)),
+                image: AssetImage("assets/images/bg.jpg"), fit: BoxFit.cover)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -662,7 +853,7 @@ class _settings extends State<settings> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Image(
-                      image: const AssetImage('images/head.png'),
+                      image: const AssetImage('assets/images/head.png'),
                       height: 50,
                       color: Color(int.parse(Core.headColor)),
                     ),

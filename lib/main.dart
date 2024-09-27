@@ -19,9 +19,10 @@ class alphab extends StatelessWidget {
         title: appTitle,
         home: Scaffold(
           appBar: AppBar(
-            title: const Text(
+            title: Text(
               appTitle,
-              style: TextStyle(color: Colors.pinkAccent),
+              style:
+                  TextStyle(color: Core.isConnect ? Colors.green : Colors.red),
             ),
             backgroundColor: const Color.fromARGB(110, 255, 255, 255),
           ),
@@ -58,7 +59,7 @@ class LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     Core.routeToChat = routeToChat;
-    if(File("./config.json").existsSync()){
+    if (File("./config.json").existsSync()) {
       var jsonConfig = jsonDecode(File("./config.json").readAsStringSync());
       textController_ip.text = jsonConfig['ip'];
       textController_port.text = jsonConfig['port'];
@@ -103,7 +104,7 @@ class LoginPageState extends State<LoginPage> {
     return Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
-          image: AssetImage("images/bg.jpg"),
+          image: AssetImage("assets/images/bg.jpg"),
           fit: BoxFit.cover,
         )),
         child: Column(
@@ -113,7 +114,7 @@ class LoginPageState extends State<LoginPage> {
                 child: Padding(
               padding: EdgeInsets.all(30),
               child: Image(
-                image: AssetImage("images/head.png"),
+                image: AssetImage("assets/images/head.png"),
                 width: 150,
                 height: 150,
               ),
@@ -153,7 +154,8 @@ class LoginPageState extends State<LoginPage> {
                   onPressed: () => {
                     Core.ip = textController_ip.text,
                     Core.port = textController_port.text,
-                    Core.connect(textController_ip.text,int.parse(textController_port.text)),
+                    Core.connect(textController_ip.text,
+                        int.parse(textController_port.text)),
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: const Color.fromARGB(100, 255, 255, 255),
