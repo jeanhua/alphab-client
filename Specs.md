@@ -11,15 +11,15 @@
 
 ### type
 
-| type               | remark                     |
-| ------------------ | -------------------------- |
-| "connect"          | 连接服务器                 |
-| "callback"         | 消息回调                   |
-| "message"          | 文本消息                   |
-| "image"            | 图片消息                   |
-| "disposable image" | 闪照消息                   |
-| "audio"            | 音频消息                   |
-| "data"             | 图片、音频数据base64的分片 |
+| type               | remark         |
+| ------------------ | -------------- |
+| "connect"          | 连接服务器     |
+| "callback"         | 消息回调       |
+| "message"          | 文本消息       |
+| "image"            | 图片消息       |
+| "disposable image" | 闪照消息       |
+| "audio"            | 音频消息       |
+| "data"             | 图片、音频数据 |
 
 ### connect
 
@@ -81,6 +81,14 @@
 | bubble color | 气泡颜色   |
 | data | base64数据 |
 
+### data
+
+{"type":"data", "id":String}
+
+| 字段 | 备注       |
+| ---- | ---------- |
+| id   | 唯一标识符 |
+
 ## 前端被动接收
 
 {"type":String, ...}
@@ -89,8 +97,9 @@
 
 {"type":"message", "id":String, "name":String, "text":String , "head color":String, "bubble color":String}
 
+| 字段         | 备注             |
+| ------------ | ---------------- |
 | name         | 昵称               |
-| ------------ | ------------------ |
 | text         | 消息（base64编码） |
 | head color   | 头像颜色           |
 | bubble color | 气泡颜色           |
@@ -99,8 +108,9 @@
 
 {"type":"image", "id":String, "name":String, "data":String , "size":String , "head color":String, "bubble color":String}
 
+| 字段         | 备注             |
+| ------------ | ---------------- |
 | name         | 昵称              |
-| ------------ | ----------------- |
 | data         | 图片(base64编码)  |
 | size         | 尺寸，如"300x400" |
 | head color   | 头像颜色          |
@@ -110,8 +120,9 @@
 
 {"type":"disposable image", "id":String, "name":String, "data":String ,"size":String , "head color":String, "bubble color":String}
 
+| 字段         | 备注             |
+| ------------ | ---------------- |
 | name         | 昵称              |
-| ------------ | ----------------- |
 | data         | 图片(base64编码)  |
 | size         | 尺寸，如"300x400" |
 | head color   | 头像颜色          |
@@ -121,11 +132,23 @@
 
 {"type":"audio", "id":String, "name":String, "data":String , "head color":String, "bubble color":String}
 
-| name         | 昵称             |
+| 字段         | 备注             |
 | ------------ | ---------------- |
+| name         | 昵称             |
 | data         | 音频(base64编码) |
 | head color   | 头像颜色         |
 | bubble color | 气泡颜色         |
+
+### data
+
+{"type":"data", "id":String, "data":String}
+
+| 字段 | 备注                         |
+| ---- | ---------------------------- |
+| id   | 唯一标识符                   |
+| data | 图片、音频等数据(base64编码) |
+
+
 
 ## 消息回调
 

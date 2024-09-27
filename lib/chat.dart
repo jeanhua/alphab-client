@@ -45,8 +45,7 @@ class chatpageState extends State<chatpage> {
   }
 
   // 弹出提示框
-  void notice_dialog(String noticeText,
-      [String title = "提示"]) {
+  void notice_dialog(String noticeText, [String title = "提示"]) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -190,11 +189,13 @@ class chatpageState extends State<chatpage> {
   }
 
   // 图片行
-  chatRowImage(BuildContext context, String name, String image, String size,
+  chatRowImage(
+      BuildContext context, String id, String name, String image, String size,
       [bool isRight = false,
       Color headNameColor = Colors.blue,
       Color bubbleColor = Colors.grey,
-      bool isSuccess = false]) {
+      bool isSuccess = false,
+      bool isAlready = false]) {
     if (!isRight) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,14 +220,25 @@ class chatpageState extends State<chatpage> {
                     bottomRight: Radius.circular(16.0),
                   ),
                   color: bubbleColor),
-              child: Image.memory(
-                base64.decoder.convert(image),
-                width: double.parse(size.split('x')[0]) <
-                        MediaQuery.of(context).size.width / 2
-                    ? double.parse(size.split('x')[0])
-                    : MediaQuery.of(context).size.width / 2,
-                fit: BoxFit.cover,
-                gaplessPlayback: true,
+              child: GestureDetector(
+                onTap: () {
+                  if(isAlready){
+                    return;
+                  }
+                  var res = Core.getDataBase64(id);
+                  if (res != "success") {
+                    notice_dialog(res);
+                  }
+                },
+                child: isAlready == false ? const Image(image: AssetImage("images/loadImage.png")):Image.memory(
+                  base64.decoder.convert(image),
+                  width: double.parse(size.split('x')[0]) <
+                      MediaQuery.of(context).size.width / 2
+                      ? double.parse(size.split('x')[0])
+                      : MediaQuery.of(context).size.width / 2,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                ),
               ),
             ),
           ),
@@ -255,7 +267,7 @@ class chatpageState extends State<chatpage> {
               child: Image.memory(
                 base64.decoder.convert(image),
                 width: double.parse(size.split('x')[0]) <
-                        MediaQuery.of(context).size.width / 2
+                    MediaQuery.of(context).size.width / 2
                     ? double.parse(size.split('x')[0])
                     : MediaQuery.of(context).size.width / 2,
                 fit: BoxFit.cover,
@@ -314,13 +326,16 @@ class chatpageState extends State<chatpage> {
                         } else if (any['type'] == 'image') {
                           return chatRowImage(
                               context,
+                              any['id'] as String,
                               any['name'] as String,
                               any['data'] as String,
                               any['size'] as String,
                               any['isRight'] as bool,
                               Color(int.parse(any['head color'] as String)),
                               Color(int.parse(any['bubble color'] as String)),
-                              any['isSuccess'] as bool);
+                              any['isSuccess'] as bool,
+                              any['isAlready'] as bool
+                          );
                         }
                       })),
             ),
@@ -456,7 +471,7 @@ class chatpageState extends State<chatpage> {
                       String id = Core.getMessageId();
                       var bs64 = base64Encode(imageBytes);
                       String size = "${image.width}x${image.height}";
-                      String result = Core.sendImage(bs64,id,size);
+                      String result = Core.sendImage(bs64, id, size);
                       Core.rowMessage.add({
                         'type': 'image',
                         'id': id,
@@ -467,6 +482,7 @@ class chatpageState extends State<chatpage> {
                         'bubble color': Core.bubbleColor,
                         'size': size,
                         'isSuccess': false,
+                        'isAlready':true,
                       });
                       print("${image.width}x${image.height}");
                       setState(() {});

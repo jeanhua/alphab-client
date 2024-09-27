@@ -162,6 +162,7 @@ class Core {
             'bubble color': result['bubble color'],
             'size': result['size'],
             'isSuccess': false,
+            'isAlready': false
           });
         } else if (type == 'disposable image') {
           rowMessage.add({
@@ -174,6 +175,7 @@ class Core {
             'isRight':false,
             'size': result['size'],
             'isSuccess': false,
+            'isAlready': false
           });
         } else if (type == 'audio') {
           rowMessage.add({
@@ -185,7 +187,16 @@ class Core {
             'bubble color': result['bubble color'],
             'isRight':false,
             'isSuccess': false,
+            'isAlready': false
           });
+        }
+        else if(type == 'data'){
+          for(var i in rowMessage){
+            if(i["id"] == result['id']){
+              i['isAlready'] = true;
+              i['data'] = result['data'];
+            }
+          }
         }
         //消息回调
         else if (type == 'callback') {
@@ -233,6 +244,23 @@ class Core {
       message['head color'] = headColor;
       message['bubble color'] = bubbleColor;
       message['text'] = text;
+      String jsonMessage = json.encode(message);
+      var encryptMessage = AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
+      _server?.add(encryptMessage);
+      return "success";
+    } catch (e) {
+      return "error:${e.toString()}";
+    }
+  }
+
+  static String getDataBase64(String id) {
+    if (_server == null || _AesKey == null || isConnect==false) {
+      return "disconnect";
+    }
+    try {
+      Map message = {};
+      message['type'] = "data";
+      message['id'] = id;
       String jsonMessage = json.encode(message);
       var encryptMessage = AesEncrypt(jsonMessage, _AesKey!.split(":")[0], _AesKey!.split(":")[1]);
       _server?.add(encryptMessage);
