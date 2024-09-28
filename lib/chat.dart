@@ -24,6 +24,7 @@ class chatpageState extends State<chatpage> {
   var isShowButton = false;
   var emojiShow = false;
   var isCountSize = false;
+  var loadKey = 0;
   late double ScreenWidth;
   late double ScreenHeight;
   FocusNode focusnode_message = FocusNode();
@@ -261,6 +262,12 @@ class chatpageState extends State<chatpage> {
       Color bubbleColor = Colors.grey,
       bool isSuccess = false,
       bool isAlready = false]) {
+
+    var Width = double.parse(size.split("x")[0]);
+    var Height = double.parse(size.split("x")[1]);
+    var showWidth = Width>ScreenWidth/2?ScreenWidth/2:Width;
+    var showHeight = Height*(showWidth/Width);
+
     if (!isRight) {
       return Padding(
         padding: const EdgeInsets.all(6),
@@ -274,7 +281,8 @@ class chatpageState extends State<chatpage> {
               color: headNameColor,
             ),
             SizedBox(
-                width: ScreenWidth - 75,
+                width: showWidth+150,
+                height: showHeight+100,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -302,10 +310,6 @@ class chatpageState extends State<chatpage> {
                                 }
                                 if (!Core.waitForData) {
                                   Core.waitForData = true;
-                                  Future.delayed(const Duration(seconds: 5),
-                                      () {
-                                    Core.waitForData = false;
-                                  });
                                 } else {
                                   notice_dialog("点太急了，等会😡");
                                   return;
@@ -321,10 +325,7 @@ class chatpageState extends State<chatpage> {
                                           "assets/images/loadImage.png"))
                                   : Image.memory(
                                       base64.decoder.convert(image),
-                                      width: double.parse(size.split('x')[0]) <
-                                              ScreenWidth / 2
-                                          ? double.parse(size.split('x')[0])
-                                          : ScreenWidth / 2,
+                                      width: showWidth,
                                       fit: BoxFit.cover,
                                       gaplessPlayback: true,
                                     ),
@@ -453,13 +454,11 @@ class chatpageState extends State<chatpage> {
                               }
                               if (!Core.waitForData) {
                                 Core.waitForData = true;
-                                Future.delayed(const Duration(seconds: 5), () {
-                                  Core.waitForData = false;
-                                });
                               } else {
                                 notice_dialog("点太急了，等会😡");
                                 return;
                               }
+
                               var res = Core.getDataBase64(id);
                               if (res != "success") {
                                 notice_dialog(res);
@@ -490,15 +489,15 @@ class chatpageState extends State<chatpage> {
                       ),
                     ],
                   ),
+                  const Tooltip(
+                    message: "闪照消息",
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.lightGreen,
+                    ),
+                  ),
                 ],
               )),
-          const Tooltip(
-            message: "闪照消息",
-            child: Icon(
-              Icons.image_not_supported,
-              color: Colors.lightGreen,
-            ),
-          ),
         ],
       ),
     );
@@ -588,6 +587,7 @@ class chatpageState extends State<chatpage> {
               ),
             ),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                     child: Container(
@@ -859,7 +859,6 @@ class chatpageState extends State<chatpage> {
                           //bgColor: const Color(0xFFF2F2F2),
                           checkPlatformCompatibility: true,
                           emojiViewConfig: EmojiViewConfig(),
-                          swapCategoryAndBottomBar: false,
                           skinToneConfig: SkinToneConfig(),
                           categoryViewConfig: CategoryViewConfig(),
                           bottomActionBarConfig: BottomActionBarConfig(),

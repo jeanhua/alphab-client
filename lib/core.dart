@@ -277,6 +277,7 @@ class Core {
         } else if (type == 'data') {
           for (var i in rowMessage) {
             if (i["id"] == result['id']) {
+              // 闪照5s后删除
               if (i["type"] == "disposable image") {
                 waitForDimage = true;
                 i['isAlready'] = true;
@@ -287,10 +288,13 @@ class Core {
                   updatePage();
                   waitForDimage = false;
                 });
+                // 非闪照
               } else {
                 i['isAlready'] = true;
                 i['data'] = result['data'];
               }
+              waitForData = false;
+              break;
             }
           }
         }
