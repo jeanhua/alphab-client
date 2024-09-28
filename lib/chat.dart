@@ -468,7 +468,7 @@ class chatpageState extends State<chatpage> {
                             child: isAlready == false
                                 ? Image(
                                     image:
-                                        AssetImage("assets/images/Dimage.png"),
+                                        const AssetImage("assets/images/Dimage.png"),
                                     width: ScreenWidth / 2,
                                   )
                                 : (isRead
