@@ -23,25 +23,44 @@ class chatpageState extends State<chatpage> {
   final scrollController_scoll = ScrollController();
   var isShowButton = false;
   var emojiShow = false;
+  var isCountSize = false;
+  late double ScreenWidth;
+  late double ScreenHeight;
+  FocusNode focusnode_message = FocusNode();
 
   // 刷新页面
   updatePage() {
     setState(() {});
     // 等待框架渲染完成
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      scrollController_scoll
-          .jumpTo(scrollController_scoll.position.maxScrollExtent);
+      Future.delayed(const Duration(milliseconds: 500), () {
+        scrollController_scoll
+            .jumpTo(scrollController_scoll.position.maxScrollExtent);
+      });
     });
   }
 
   // 断开连接
   disconnect() async {
     notice_dialog("与服务器断开连接！", "提示");
+    setState(() {});
   }
 
   @override
   void initState() {
     // TODO: implement initState
+    ///添加获取焦点与失去焦点的兼听
+    focusnode_message.addListener(() {
+      ///当前兼听的 TextFeild 是否获取了输入焦点
+      bool hasFocus = focusnode_message.hasFocus;
+      if (hasFocus) {
+        if (emojiShow) {
+          setState(() {
+            emojiShow = false;
+          });
+        }
+      }
+    });
     super.initState();
     Core.updatePage = updatePage;
     Core.disconnect = disconnect;
@@ -80,7 +99,7 @@ class chatpageState extends State<chatpage> {
       Color bubbleColor = Colors.grey,
       bool isSuccess = false]) {
     // 处理text溢出
-    const rowMaxLength = 30;
+    const rowMaxLength = 13;
     if (text.length > rowMaxLength) {
       var textdeal = "";
       int j = 0;
@@ -96,100 +115,140 @@ class chatpageState extends State<chatpage> {
     }
     // 左边气泡
     if (!isRight) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Image(
-            image: const AssetImage('assets/images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(16.0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: text)).then((_) {
-                    // 显示一个SnackBar来通知用户文本已被复制
-                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  });
-                },
-                child: Text(
-                  ' $text ',
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ),
-                  softWrap: true,
-                ),
-              ),
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Image(
+              image: const AssetImage('assets/images/head.png'),
+              height: 50,
+              color: headNameColor,
             ),
-          ),
-        ],
+            SizedBox(
+                width: ScreenWidth - 75,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(color: headNameColor, fontSize: 15),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(1),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(0),
+                                  topRight: Radius.circular(16.0),
+                                  bottomLeft: Radius.circular(16.0),
+                                  bottomRight: Radius.circular(16.0),
+                                ),
+                                color: bubbleColor),
+                            child: GestureDetector(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: text))
+                                    .then((_) {
+                                  // 显示一个SnackBar来通知用户文本已被复制
+                                  const snackBar =
+                                      SnackBar(content: Text('文本已复制到剪贴板'));
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+                                });
+                              },
+                              child: Text(
+                                ' $text ',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                ),
+                                softWrap: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ))
+          ],
+        ),
       );
     }
     // 右边气泡
     else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Tooltip(
-              message: isSuccess ? "发送成功" : "发送中",
-              child: Icon(
-                isSuccess ? Icons.check_circle : Icons.update_rounded,
-                color: Colors.lightGreen,
-              )),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16.0),
-                    topRight: Radius.circular(0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: text)).then((_) {
-                    // 显示一个SnackBar来通知用户文本已被复制
-                    const snackBar = SnackBar(content: Text('文本已复制到剪贴板'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  });
-                },
-                child: Text(
-                  ' $text ',
-                  style: const TextStyle(fontSize: 20),
-                  softWrap: true,
-                ),
-              ),
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+                width: ScreenWidth - 75,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Tooltip(
+                        message: isSuccess ? "发送成功" : "发送中",
+                        child: Icon(
+                          isSuccess ? Icons.check_circle : Icons.update_rounded,
+                          color: Colors.lightGreen,
+                        )),
+                    Column(
+                      children: [
+                        SizedBox(
+                          child: Text(
+                            name,
+                            style:
+                                TextStyle(color: headNameColor, fontSize: 15),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(1),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(16.0),
+                                  topRight: Radius.circular(0),
+                                  bottomLeft: Radius.circular(16.0),
+                                  bottomRight: Radius.circular(16.0),
+                                ),
+                                color: bubbleColor),
+                            child: GestureDetector(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: text))
+                                    .then((_) {
+                                  // 显示一个SnackBar来通知用户文本已被复制
+                                  const snackBar =
+                                      SnackBar(content: Text('文本已复制到剪贴板'));
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+                                });
+                              },
+                              child: Text(
+                                ' $text ',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                ),
+                                softWrap: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+            Image(
+              image: const AssetImage('assets/images/head.png'),
+              height: 50,
+              color: headNameColor,
             ),
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Image(
-            image: const AssetImage('assets/images/head.png'),
-            height: 50,
-            color: headNameColor,
-          ),
-        ],
+          ],
+        ),
       );
     }
   }
@@ -203,99 +262,143 @@ class chatpageState extends State<chatpage> {
       bool isSuccess = false,
       bool isAlready = false]) {
     if (!isRight) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Image(
-              image: const AssetImage("assets/images/head.png"),
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Image(
+              image: const AssetImage('assets/images/head.png'),
+              height: 50,
               color: headNameColor,
-              height: 50),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(16.0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: GestureDetector(
-                onTap: () {
-                  if (isAlready) {
-                    return;
-                  }
-                  var res = Core.getDataBase64(id);
-                  if (res != "success") {
-                    notice_dialog(res);
-                  }
-                },
-                child: isAlready == false
-                    ? const Image(
-                        image: AssetImage("assets/images/loadImage.png"))
-                    : Image.memory(
-                        base64.decoder.convert(image),
-                        width: double.parse(size.split('x')[0]) <
-                                MediaQuery.of(context).size.width / 2
-                            ? double.parse(size.split('x')[0])
-                            : MediaQuery.of(context).size.width / 2,
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
-                      ),
-              ),
             ),
-          ),
-        ],
+            SizedBox(
+                width: ScreenWidth - 75,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(color: headNameColor, fontSize: 15),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(1),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(0),
+                                  topRight: Radius.circular(16.0),
+                                  bottomLeft: Radius.circular(16.0),
+                                  bottomRight: Radius.circular(16.0),
+                                ),
+                                color: bubbleColor),
+                            child: GestureDetector(
+                              onTap: () {
+                                if (isAlready) {
+                                  return;
+                                }
+                                if (!Core.waitForData) {
+                                  Core.waitForData = true;
+                                  Future.delayed(const Duration(seconds: 5),
+                                      () {
+                                    Core.waitForData = false;
+                                  });
+                                } else {
+                                  notice_dialog("点太急了，等会😡");
+                                  return;
+                                }
+                                var res = Core.getDataBase64(id);
+                                if (res != "success") {
+                                  notice_dialog(res);
+                                }
+                              },
+                              child: isAlready == false
+                                  ? const Image(
+                                      image: AssetImage(
+                                          "assets/images/loadImage.png"))
+                                  : Image.memory(
+                                      base64.decoder.convert(image),
+                                      width: double.parse(size.split('x')[0]) <
+                                              ScreenWidth / 2
+                                          ? double.parse(size.split('x')[0])
+                                          : ScreenWidth / 2,
+                                      fit: BoxFit.cover,
+                                      gaplessPlayback: true,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ))
+          ],
+        ),
       );
       // 右边气泡
     } else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Tooltip(
-              message: isSuccess ? "发送成功" : "发送中",
-              child: Icon(
-                isSuccess ? Icons.check_circle : Icons.update_rounded,
-                color: Colors.lightGreen,
-              )),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(16.0),
-                    bottomLeft: Radius.circular(16.0),
-                    bottomRight: Radius.circular(16.0),
-                  ),
-                  color: bubbleColor),
-              child: Image.memory(
-                base64.decoder.convert(image),
-                width: double.parse(size.split('x')[0]) <
-                        MediaQuery.of(context).size.width / 2
-                    ? double.parse(size.split('x')[0])
-                    : MediaQuery.of(context).size.width / 2,
-                fit: BoxFit.cover,
-                gaplessPlayback: true,
-              ),
-            ),
-          ),
-          Text(
-            name,
-            style: TextStyle(color: headNameColor, fontSize: 25),
-          ),
-          Image(
-              image: const AssetImage("assets/images/head.png"),
-              color: headNameColor,
-              height: 50),
-        ],
+      return Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+                width: ScreenWidth - 75,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Tooltip(
+                        message: isSuccess ? "发送成功" : "发送中",
+                        child: Icon(
+                          isSuccess ? Icons.check_circle : Icons.update_rounded,
+                          color: Colors.lightGreen,
+                        )),
+                    Column(
+                      children: [
+                        SizedBox(
+                          child: Text(
+                            name,
+                            style:
+                                TextStyle(color: headNameColor, fontSize: 15),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(1),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(0),
+                                  topRight: Radius.circular(16.0),
+                                  bottomLeft: Radius.circular(16.0),
+                                  bottomRight: Radius.circular(16.0),
+                                ),
+                                color: bubbleColor),
+                            child: Image.memory(
+                              base64.decoder.convert(image),
+                              width: double.parse(size.split('x')[0]) <
+                                      ScreenWidth / 2
+                                  ? double.parse(size.split('x')[0])
+                                  : ScreenWidth / 2,
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+            Image(
+                image: const AssetImage("assets/images/head.png"),
+                color: headNameColor,
+                height: 50),
+          ],
+        ),
       );
     }
   }
@@ -307,73 +410,108 @@ class chatpageState extends State<chatpage> {
       bool isSuccess = false,
       bool isAlready = false,
       bool isRead = false]) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Image(
-            image: const AssetImage("assets/images/head.png"),
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Image(
+            image: const AssetImage('assets/images/head.png'),
+            height: 50,
             color: headNameColor,
-            height: 50),
-        Text(
-          name,
-          style: TextStyle(color: headNameColor, fontSize: 25),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(15),
-          child: Container(
-            decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(0),
-                  topRight: Radius.circular(16.0),
-                  bottomLeft: Radius.circular(16.0),
-                  bottomRight: Radius.circular(16.0),
-                ),
-                color: bubbleColor),
-            child: GestureDetector(
-              onTap: () {
-                if (isAlready) {
-                  return;
-                }
-                if (Core.waitForDimage) {
-                  return;
-                }
-                var res = Core.getDataBase64(id);
-                if (res != "success") {
-                  notice_dialog(res);
-                }
-              },
-              child: isAlready == false
-                  ? const Image(image: AssetImage("assets/images/Dimage.png"))
-                  : (isRead
-                      ? const Image(
-                          image: AssetImage("assets/images/broken.png"))
-                      : Image.memory(
-                          base64.decoder.convert(image),
-                          width: double.parse(size.split('x')[0]) <
-                                  MediaQuery.of(context).size.width / 2
-                              ? double.parse(size.split('x')[0])
-                              : MediaQuery.of(context).size.width / 2,
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                        )),
+          ),
+          SizedBox(
+              width: ScreenWidth / 3 * 2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(color: headNameColor, fontSize: 15),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(1),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(0),
+                                topRight: Radius.circular(16.0),
+                                bottomLeft: Radius.circular(16.0),
+                                bottomRight: Radius.circular(16.0),
+                              ),
+                              color: bubbleColor),
+                          child: GestureDetector(
+                            onTap: () {
+                              if (isAlready) {
+                                return;
+                              }
+                              if (Core.waitForDimage) {
+                                return;
+                              }
+                              if (!Core.waitForData) {
+                                Core.waitForData = true;
+                                Future.delayed(const Duration(seconds: 5), () {
+                                  Core.waitForData = false;
+                                });
+                              } else {
+                                notice_dialog("点太急了，等会😡");
+                                return;
+                              }
+                              var res = Core.getDataBase64(id);
+                              if (res != "success") {
+                                notice_dialog(res);
+                              }
+                            },
+                            child: isAlready == false
+                                ? Image(
+                                    image:
+                                        AssetImage("assets/images/Dimage.png"),
+                                    width: ScreenWidth / 2,
+                                  )
+                                : (isRead
+                                    ? const Image(
+                                        image: AssetImage(
+                                            "assets/images/broken.png"))
+                                    : Image.memory(
+                                        base64.decoder.convert(image),
+                                        width: double.parse(
+                                                    size.split('x')[0]) <
+                                                ScreenWidth / 2
+                                            ? double.parse(size.split('x')[0])
+                                            : ScreenWidth / 2,
+                                        fit: BoxFit.cover,
+                                        gaplessPlayback: true,
+                                      )),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )),
+          const Tooltip(
+            message: "闪照消息",
+            child: Icon(
+              Icons.image_not_supported,
+              color: Colors.lightGreen,
             ),
           ),
-        ),
-        const Tooltip(
-          message: "闪照消息",
-          child: Icon(
-            Icons.image_not_supported,
-            color: Colors.lightGreen,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
   // <-----------------------消息行生成结束----------------------->
 
   @override
   Widget build(BuildContext context) {
+    if (!isCountSize) {
+      ScreenHeight = MediaQuery.sizeOf(context).height;
+      ScreenWidth = MediaQuery.sizeOf(context).width;
+      isCountSize = true;
+    }
     // TODO: implement build
     return Scaffold(
         appBar: AppBar(
@@ -393,6 +531,8 @@ class chatpageState extends State<chatpage> {
                   thumbVisibility: true, // 是否总是显示滚动条滑块
                   controller: scrollController_scoll,
                   child: ListView.builder(
+                      addAutomaticKeepAlives: true,
+                      addRepaintBoundaries: true,
                       itemCount: Core.rowMessage.length,
                       controller: scrollController_scoll,
                       itemBuilder: (BuildContext builContext, int index) {
@@ -434,6 +574,19 @@ class chatpageState extends State<chatpage> {
                         }
                       })),
             ),
+            Visibility(
+              visible: !Core.isConnect,
+              child: SizedBox(
+                width: ScreenWidth / 2,
+                child: TextButton(
+                    style: TextButton.styleFrom(
+                        backgroundColor: Colors.lightGreen),
+                    onPressed: () {
+                      Core.connect(Core.ip, int.parse(Core.port));
+                    },
+                    child: const Text("断线重连")),
+              ),
+            ),
             Row(
               children: [
                 Expanded(
@@ -442,6 +595,7 @@ class chatpageState extends State<chatpage> {
                       color: const Color.fromARGB(150, 255, 255, 255),
                       borderRadius: BorderRadius.circular(20)),
                   child: TextField(
+                    focusNode: focusnode_message,
                     style: const TextStyle(color: Colors.black, fontSize: 20),
                     maxLines: null,
                     controller: textController_message,
@@ -501,6 +655,7 @@ class chatpageState extends State<chatpage> {
                           setState(() {});
                           await Core.player.play(AssetSource('send.wav'));
                           textController_message.text = "";
+                          focusnode_message.unfocus();
                         }
                       },
                       style: ButtonStyle(
@@ -667,10 +822,9 @@ class chatpageState extends State<chatpage> {
                     },
                     child: IconButton(
                       onPressed: () {
+                        focusnode_message.unfocus();
                         setState(() {
                           emojiShow = !emojiShow;
-                          scrollController_scoll
-                              .jumpTo(scrollController_scoll.position.maxScrollExtent);
                         });
                       },
                       icon: const Icon(Icons.emoji_emotions),
@@ -688,8 +842,8 @@ class chatpageState extends State<chatpage> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height / 2,
+                      width: ScreenWidth,
+                      height: ScreenHeight / 3,
                       child: EmojiPicker(
                         onEmojiSelected: (Category? category, Emoji emoji) {
                           // Do something when emoji is tapped (optional)
@@ -698,14 +852,14 @@ class chatpageState extends State<chatpage> {
                           // Do something when the user taps the backspace button (optional)
                           // Set it to null to hide the Backspace-Button
                         },
-                        textEditingController: textController_message, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
+                        textEditingController:
+                            textController_message, // pass here the same [TextEditingController] that is connected to your input field, usually a [TextFormField]
                         config: const Config(
                           height: 256,
                           //bgColor: const Color(0xFFF2F2F2),
                           checkPlatformCompatibility: true,
-                          emojiViewConfig: EmojiViewConfig(
-                          ),
-                          swapCategoryAndBottomBar:  false,
+                          emojiViewConfig: EmojiViewConfig(),
+                          swapCategoryAndBottomBar: false,
                           skinToneConfig: SkinToneConfig(),
                           categoryViewConfig: CategoryViewConfig(),
                           bottomActionBarConfig: BottomActionBarConfig(),
@@ -850,45 +1004,59 @@ class _settings extends State<settings> {
                       );
                     },
                     icon: const Icon(Icons.color_lens)),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Image(
-                      image: const AssetImage('assets/images/head.png'),
-                      height: 50,
-                      color: Color(int.parse(Core.headColor)),
-                    ),
-                    Text(
-                      Core.name,
-                      style: TextStyle(
-                          color: Color(int.parse(Core.headColor)),
-                          fontSize: 25),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(0),
-                              topRight: Radius.circular(16.0),
-                              bottomLeft: Radius.circular(16.0),
-                              bottomRight: Radius.circular(16.0),
-                            ),
-                            color: Color(int.parse(Core.bubbleColor))),
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: const Text(
-                            ' 你好 ',
-                            style: TextStyle(
-                              fontSize: 20,
-                            ),
-                            softWrap: true,
-                          ),
-                        ),
+                Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Image(
+                        image: const AssetImage('assets/images/head.png'),
+                        height: 50,
+                        color: Color(int.parse(Core.headColor)),
                       ),
-                    )
-                  ],
+                      SizedBox(
+                          height: 100,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    Core.name,
+                                    style: TextStyle(
+                                        color: Color(int.parse(Core.headColor)),
+                                        fontSize: 15),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(1),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(0),
+                                            topRight: Radius.circular(16.0),
+                                            bottomLeft: Radius.circular(16.0),
+                                            bottomRight: Radius.circular(16.0),
+                                          ),
+                                          color: Color(
+                                              int.parse(Core.bubbleColor))),
+                                      child: GestureDetector(
+                                        child: const Text(
+                                          ' 你好 ',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                          softWrap: true,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ))
+                    ],
+                  ),
                 ),
                 IconButton(
                     tooltip: '气泡颜色',

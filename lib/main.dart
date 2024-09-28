@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alphab/chat.dart';
 import 'package:alphab/core.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const alphab());
@@ -59,11 +60,15 @@ class LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     Core.routeToChat = routeToChat;
-    if (File("./config.json").existsSync()) {
-      var jsonConfig = jsonDecode(File("./config.json").readAsStringSync());
-      textController_ip.text = jsonConfig['ip'];
-      textController_port.text = jsonConfig['port'];
-    }
+
+    getApplicationDocumentsDirectory().then((dir) {
+      if (File("${dir.path}/config.json").existsSync()) {
+        var jsonConfig =
+            jsonDecode(File("${dir.path}/config.json").readAsStringSync());
+        textController_ip.text = jsonConfig['ip'];
+        textController_port.text = jsonConfig['port'];
+      }
+    });
   }
 
   // 弹出提示框

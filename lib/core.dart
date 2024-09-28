@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:http/http.dart' as http;
 import 'dart:math';
+import 'package:path_provider/path_provider.dart';
 
 class Core {
   static late VoidCallback routeToChat;
@@ -17,11 +18,13 @@ class Core {
   static WebSocket? _server;
   static String? _AesKey;
   static var _publicKey;
+  static var reConnect = false;
   static var _privateKey;
   static int _count = 0;
   static String _connectId = "";
   static bool isConnect = false;
   static bool waitForDimage = false;
+  static bool waitForData = false;
   // 音频
   static AudioPlayer player = new AudioPlayer();
   // 全局消息链
@@ -31,7 +34,10 @@ class Core {
   static String name = getRandomName();
 
   static _generateRsaKey() async {
-    if(!File("./Key/publicKey.pem").existsSync() || !File("./Key/privateKey.pem").existsSync()){
+    if (!File("${(await getApplicationDocumentsDirectory()).path}/Key/publicKey.pem")
+            .existsSync() ||
+        !File("${(await getApplicationDocumentsDirectory()).path}/Key/privateKey.pem")
+            .existsSync()) {
       final headers = {
         'Accept': 'application/json, text/javascript, */*; q=0.01',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -45,10 +51,10 @@ class Core {
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin',
         'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
         'X-Requested-With': 'XMLHttpRequest',
         'sec-ch-ua':
-        '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+            '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
       };
@@ -60,18 +66,27 @@ class Core {
       var url = Uri.parse('https://www.bejson.com/Bejson/Api/Rsa/getRsaKey');
       final res = await http.post(url, headers: headers, body: data);
       final status = res.statusCode;
-      if (status != 200) throw Exception('http.post error: statusCode= $status');
+      if (status != 200)
+        throw Exception('http.post error: statusCode= $status');
       var result = json.decode(res.body);
-      var dir = Directory("./Key");
+      var dir =
+          Directory("${(await getApplicationDocumentsDirectory()).path}/Key");
       if (!dir.existsSync()) {
         dir.create();
       }
-      await File("./Key/publicKey.pem").writeAsString(result['data']['public']);
-      await File("./Key/privateKey.pem").writeAsString(result['data']['private']);
+      await File(
+              "${(await getApplicationDocumentsDirectory()).path}/Key/publicKey.pem")
+          .writeAsString(result['data']['public']);
+      await File(
+              "${(await getApplicationDocumentsDirectory()).path}/Key/privateKey.pem")
+          .writeAsString(result['data']['private']);
     }
-    _publicKey =
-        encrypt.RSAKeyParser().parse(File("./Key/publicKey.pem").readAsStringSync());
-    _privateKey = File("./Key/privateKey.pem").readAsStringSync();
+    _publicKey = encrypt.RSAKeyParser().parse(File(
+            "${(await getApplicationDocumentsDirectory()).path}/Key/publicKey.pem")
+        .readAsStringSync());
+    _privateKey = File(
+            "${(await getApplicationDocumentsDirectory()).path}/Key/privateKey.pem")
+        .readAsStringSync();
   }
 
   static getRandomName() {
@@ -122,7 +137,9 @@ class Core {
       await _generateRsaKey();
       message['type'] = "connect";
       message['id'] = _connectId;
-      message['public key'] = await File('./Key/publicKey.pem').readAsString();
+      message['public key'] = await File(
+              "${(await getApplicationDocumentsDirectory()).path}/Key/publicKey.pem")
+          .readAsString();
       String jsonMessage = json.encode(message);
       _server?.add(jsonMessage);
       _server?.listen((data) async {
@@ -172,19 +189,30 @@ class Core {
               _privateKey);
           Core.isConnect = true;
           late String config;
-          if (File("./config.json").existsSync()) {
-            config = File("./config.json").readAsStringSync();
+          if (File(
+                  "${(await getApplicationDocumentsDirectory()).path}/config.json")
+              .existsSync()) {
+            config = File(
+                    "${(await getApplicationDocumentsDirectory()).path}/config.json")
+                .readAsStringSync();
             var jsonconfig = jsonDecode(config);
             jsonconfig['ip'] = ip;
             jsonconfig['port'] = port;
-            File("./config.json").writeAsString(jsonEncode(jsonconfig));
+            File("${(await getApplicationDocumentsDirectory()).path}/config.json")
+                .writeAsString(jsonEncode(jsonconfig));
           } else {
             Map configjson = new Map();
             configjson['ip'] = ip;
             configjson['port'] = port;
-            File("./config.json").writeAsString(jsonEncode(configjson));
+            File("${(await getApplicationDocumentsDirectory()).path}/config.json")
+                .writeAsString(jsonEncode(configjson));
           }
-          routeToChat();
+          if (!reConnect) {
+            routeToChat();
+          }
+          else{
+            updatePage();
+          }
         }
       } else {
         var result = json.decode(
@@ -290,6 +318,7 @@ class Core {
     _server = null;
     _AesKey = null;
     Core.isConnect = false;
+    reConnect = true;
     print('断开连接');
   }
 
