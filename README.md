@@ -4,6 +4,8 @@
 
 服务端仓库 [jeanhua/alphab-server: 匿名加密聊天程序(服务器) (github.com)](https://github.com/jeanhua/alphab-server)
 
+一>[消息文档](./Specs.md)
+
 > 美化UI
 >
 > 添加气泡效果
