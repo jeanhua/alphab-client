@@ -281,7 +281,7 @@ class chatpageState extends State<chatpage> {
               color: headNameColor,
             ),
             SizedBox(
-                width: showWidth+150,
+                width: ScreenWidth-63,
                 height: showHeight+100,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -293,7 +293,7 @@ class chatpageState extends State<chatpage> {
                           style: TextStyle(color: headNameColor, fontSize: 15),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(1),
+                          padding: const EdgeInsets.all(6),
                           child: Container(
                             decoration: BoxDecoration(
                                 borderRadius: const BorderRadius.only(
@@ -348,7 +348,8 @@ class chatpageState extends State<chatpage> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             SizedBox(
-                width: ScreenWidth - 75,
+                width: ScreenWidth-63,
+                height: showHeight+100,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,10 +382,7 @@ class chatpageState extends State<chatpage> {
                                 color: bubbleColor),
                             child: Image.memory(
                               base64.decoder.convert(image),
-                              width: double.parse(size.split('x')[0]) <
-                                      ScreenWidth / 2
-                                  ? double.parse(size.split('x')[0])
-                                  : ScreenWidth / 2,
+                              width: showWidth,
                               fit: BoxFit.cover,
                               gaplessPlayback: true,
                             ),
@@ -411,6 +409,13 @@ class chatpageState extends State<chatpage> {
       bool isSuccess = false,
       bool isAlready = false,
       bool isRead = false]) {
+
+    var Width = double.parse(size.split("x")[0]);
+    var Height = double.parse(size.split("x")[1]);
+    var showWidth = Width>ScreenWidth/2?ScreenWidth/2:Width;
+    var showHeight = Height*(showWidth/Width);
+
+
     return Padding(
       padding: const EdgeInsets.all(6),
       child: Row(
@@ -423,9 +428,11 @@ class chatpageState extends State<chatpage> {
             color: headNameColor,
           ),
           SizedBox(
-              width: ScreenWidth / 3 * 2,
+              width: ScreenWidth-63,
+              height: showHeight+100,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Column(
                     children: [
@@ -476,11 +483,7 @@ class chatpageState extends State<chatpage> {
                                             "assets/images/broken.png"))
                                     : Image.memory(
                                         base64.decoder.convert(image),
-                                        width: double.parse(
-                                                    size.split('x')[0]) <
-                                                ScreenWidth / 2
-                                            ? double.parse(size.split('x')[0])
-                                            : ScreenWidth / 2,
+                                        width: showWidth,
                                         fit: BoxFit.cover,
                                         gaplessPlayback: true,
                                       )),
